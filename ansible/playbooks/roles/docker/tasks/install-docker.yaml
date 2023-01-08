@@ -1,0 +1,32 @@
+---
+- import_role:
+    name: docker
+    tasks_from: common
+
+- name: Create directory /etc/docker
+  file: 
+    path: /etc/docker
+    state: directory
+    mode: 0755
+
+- name: Create file /etc/docker/deamon.json
+  copy:
+    dest: /etc/docker/deamon.json
+    content: |
+      {
+        "exec-opts": ["native.cgroupdriver=systemd"],
+        "log-driver": "json-file",
+        "log-opts": {
+          "max-size": "100m"
+        },
+        "storage-driver": "overlay2",
+        "live-restore": true
+      }
+    mode: 0644
+  register: update_docker_deamon_config
+
+- name: Restart docker service
+  service:
+    name: docker
+    state: restarted
+  when: not is_in_container and update_docker_deamon_config.changed

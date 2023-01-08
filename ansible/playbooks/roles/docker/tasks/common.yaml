@@ -1,0 +1,63 @@
+---
+- import_role:
+    name: utils
+    tasks_from: read_system_info
+
+- name: Remove old docker
+  apt:
+    name: '{{ packages }}'
+    state: absent
+    force: true
+  vars:
+    packages:
+      - docker
+      - docker-engine
+      - docker.io
+      - containerd
+      - runc
+      - libnvidia-container1
+      - libnvodia-container-tools
+      - nvidia-container-runtime
+      - nvidia-container-runtime-hook
+      - nvidia-docker2
+
+- name: Install docker and it's deps
+  block:
+    - name: Install docker deps
+      apt:
+        name: '{{ packages }}'
+        state: present
+        install_recommends: false
+        force: true
+        update_cache: true
+      vars:
+        packages:
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+    
+    - name: Add signing key
+      apt_key:
+        url: "https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg"
+        state: present
+
+    - name: Add repository into sources list
+      apt_repository:
+        repo: "deb [arch={{ dep_architecture }}] https://download.docker.com/linux/\
+               {{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable"
+        state: present
+        filename: docker
+
+    - name: Install Docker
+      apt:
+        name: '{{ packages }}'
+        state: present
+        install_recommends: false
+        force: true
+        update_cache: true
+      vars:
+        packages:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io

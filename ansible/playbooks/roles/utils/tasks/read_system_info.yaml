@@ -1,0 +1,14 @@
+---
+- name: Get DEB architecture
+  shell: dpkg --print-architecture
+  register: architecture
+
+- set_fact:
+    is_ubuntu_16_04: "{{ ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_version']\
+      \ == '16.04'}}"
+    is_ubuntu_18_04: "{{ ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_version']\
+      \ == '18.04'}}"
+    is_ubuntu_20_04: "{{ ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_version']\
+      \ == '20.04'}}"
+    is_in_container: "{{ ansible_facts['virtualization_type'] == 'docker' }}"
+    dep_architecture: "{{ architecture.stdout }}"

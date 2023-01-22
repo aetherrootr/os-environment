@@ -33,7 +33,11 @@ function install_ansible {
 
   # Delete unexpected ansible
   apt-get remove ansible -y
-  apt-get install -y --no-install-recommends python3 python3-pip python3-wheel python3-apt
+  # Here we use sshpass to manage our passwords,
+  # although it is not a secure way to store our passwords,
+  # but as a suite of tools for private use it is an acceptable security risk.
+  # https://stackoverflow.com/questions/33469770/security-of-sshpass
+  apt-get install -y --no-install-recommends python3 python3-pip python3-wheel python3-apt sshpass
   python3 -m pip install --upgrade pip
   python3 -m pip install setuptools
   delete_pip_package_if_exists "ansible"

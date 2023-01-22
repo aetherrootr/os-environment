@@ -1,0 +1,32 @@
+---
+- name: Install openclash deps
+  community.general.opkg:
+    name: "{{ packages }}"
+    state: present
+    update_cache: true
+  vars:
+    packages:
+      - coreutils-nohup
+      - bash
+      - iptables
+      - dnsmasq-full
+      - curl
+      - ca-certificates
+      - ipset
+      - ip-full
+      - iptables-mod-tproxy
+      - iptables-mod-extra
+      - libcap
+      - libcap-bin
+      - ruby
+      - ruby-yaml
+      - kmod-tun
+      - kmod-inet-diag
+      - unzip
+      - luci-compat
+      - luci
+      - luci-base
+
+- import_role:
+    name: openclash
+    tasks_from: install_openclash

@@ -1,28 +1,4 @@
 ---
-- name: Modify the management page port
-  block:
-    - name: Modify gl router management page port
-      copy:
-        src: "{{ role_path }}/files/gl.conf"
-        dest: "/etc/nginx/conf.d/gl.conf"
-        owner: root
-        group: root
-        mode: 0600
-    - name: Modify openwrt management page port
-      copy:
-        src: "{{ role_path }}/files/uhttpd"
-        dest: "/etc/config/uhttpd"
-        owner: root
-        group: root
-        mode: 0600
-
-- name: Reload management page
-  block:
-    - name: Reload gl router management page
-      command: "/etc/init.d/nginx restart" 
-    - name: Reload openwrt management page
-      command: "/etc/init.d/uhttpd restart"
-
 - name: Download gl golink package
   get_url: 
     url: "{{ gl_golink_package_url }}"
@@ -62,6 +38,9 @@
     - name: Move data cut path
       command: "mv {{ archive_contents.files[0] }} {{ golinks_app_folder }}/data"
       when: not data_stat.stat.exists
+
+- name: Open golinks to start automatically
+  command: "/etc/init.d/golinks enable"
 
 - name: Start golinks
   command: "/etc/init.d/golinks start"

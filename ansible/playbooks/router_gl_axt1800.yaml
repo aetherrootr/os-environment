@@ -1,11 +1,12 @@
 ---
-- hosts: gl_inet
+- hosts: gl_axt1800
   become: true
   become_user: root
   tasks:
     - import_role:
         name: golink
-        tasks_from: install-glinet-golinks
+        tasks_from: install_for_gl_axt1800
     
     - import_role:
         name: openclash
+        tasks_from: install_for_gl_axt1800

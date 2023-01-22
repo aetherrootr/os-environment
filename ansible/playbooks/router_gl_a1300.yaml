@@ -1,0 +1,12 @@
+---
+- hosts: gl_a1300
+  become: true
+  become_user: root
+  tasks:
+    - import_role:
+        name: golink
+        tasks_from: install_for_gl_a1300
+    
+    - import_role:
+        name: openclash
+        tasks_from: install_for_gl_a1300

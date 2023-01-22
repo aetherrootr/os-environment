@@ -1,0 +1,46 @@
+---
+# In Chain, Access Github very slow, so don't remove openclash
+# - name: Reomve openclash
+#   community.general.opkg:
+#     name: luci-app-openclash
+#     state: absent
+
+- name: Install openclash deps
+  community.general.opkg:
+    name: "{{ packages }}"
+    state: present
+    update_cache: true
+  vars:
+    packages:
+      - coreutils-nohup
+      - bash
+      - iptables
+      - dnsmasq-full
+      - curl
+      - ca-certificates
+      - ipset
+      - ip-full
+      - iptables-mod-tproxy
+      - iptables-mod-extra
+      - libcap
+      - libcap-bin
+      - ruby
+      - ruby-yaml
+      - kmod-tun
+      - kmod-inet-diag
+      - unzip
+      - luci-compat
+      - luci
+      - luci-base
+
+# community.general.opkg currently does not support installing 
+# packages from local and remote urls
+- name: Get openclash package
+  get_url: 
+    url: "{{ openclash_url }}"
+    dest: "{{ openclash_folder }}/luci-app-openclash.ipk"
+    mode: 0644
+    force: true
+
+- name: Install openclash
+  shell: "opkg install {{ openclash_folder }}/luci-app-openclash.ipk"

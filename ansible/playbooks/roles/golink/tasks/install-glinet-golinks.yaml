@@ -1,4 +1,15 @@
 ---
+- name: Update nginx config
+  copy:
+    src: "{{ role_path }}/files/gl.conf"
+    dest: "/etc/nginx/conf.d/gl.conf"
+    owner: root
+    group: root
+    mode: 0600
+
+- name: Restart nginx to apply config change
+  command: "/etc/init.d/nginx restart" 
+
 - name: Download gl golink package
   get_url: 
     url: "{{ gl_golink_package_url }}"

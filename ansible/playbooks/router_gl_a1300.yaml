@@ -5,7 +5,7 @@
   tasks:
     - import_role:
         name: golink
-        tasks_from: install_for_gl_a1300
+        tasks_from: install-glinet-golinks
     
     - import_role:
         name: openclash

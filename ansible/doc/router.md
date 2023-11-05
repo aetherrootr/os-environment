@@ -20,3 +20,11 @@ Run the command to deploy golinks and openclash on the soft route:
 ```
 ansible-playbook -i inventories/router/ playbooks/router_gl_a1300.yaml -u root --ask-become-pass
 ```
+
+## Remove CN restrictions (very dangerous)
+
+```
+echo "US" |dd of=/dev/mtdblock8 bs=1 seek=152
+sync
+reboot
+```

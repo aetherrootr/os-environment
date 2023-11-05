@@ -1,0 +1,8 @@
+---
+- name: update manager web file
+  copy:
+    src: "{{ role_path }}/files/gl_home.html"
+    dest: "/www/gl_home.html"
+    owner: root
+    group: root
+    mode: 0644

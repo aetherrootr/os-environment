@@ -13,8 +13,8 @@ if [ ! -x /usr/bin/lsb_release ]; then
 fi
 
 readonly UBUNTU_VERSION="$(lsb_release -sc)"
-if [[ "$UBUNTU_VERSION" != xenial && "$UBUNTU_VERSION" != bionic && "$UBUNTU_VERSION" != focal ]]; then
-  echo "This scipt only supports Ubuntu 16.04 or Ubuntu 18.04 or Ubuntu 20.04."
+if [[ "$UBUNTU_VERSION" != xenial && "$UBUNTU_VERSION" != bionic && "$UBUNTU_VERSION" != focal && "$UBUNTU_VERSION" != jammy ]]; then
+  echo "This scipt only supports Ubuntu 16.04 or Ubuntu 18.04 or Ubuntu 20.04 or Ubuntu 22.04."
   exit 2
 fi
 

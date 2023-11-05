@@ -4,6 +4,10 @@
   become_user: root
   tasks:
     - import_role:
+        name: gl_router_web
+        tasks_from: update_manager_web
+
+    - import_role:
         name: golink
         tasks_from: install-glinet-golinks
     

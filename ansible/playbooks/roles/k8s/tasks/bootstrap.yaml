@@ -1,0 +1,40 @@
+---
+- name: Load required modules
+  modprobe:
+    name: '{{ item }}'
+    state: present
+  loop:
+    - br_netfilter
+    - ip_conntrack
+    - overlay
+
+- name: Add required modules to /etc/modules
+  lineinfile:
+    path: /etc/modules
+    line: '{{ item }}'
+  loop:
+    - br_netfilter
+    - ip_conntrack
+    - overlay
+
+- name: setup sysctl params
+  sysctl:
+    name: "{{ item }}"
+    value: '1'
+    sysctl_file: /etc/sysctl.d/10-k8s.conf
+    sysctl_set: true
+  loop:
+    - net.bridge.bridge-nf-call-iptables
+    - net.bridge.bridge-nf-call-ip6tables
+    - net.ipv4.ip_forward
+    - net.ipv6.conf.all.forwarding
+
+- name: Disable swap
+  command: swapoff -a
+
+- name: Disable swap permanently, persist reboots
+  replace:
+    path: /etc/fstab
+    regexp: '^(\s*)([^#\n]+\s+)(\w+\s+)swap(\s+.*)$'
+    replace: '#\1\2\3swap\4'
+    backup: yes

@@ -1,0 +1,21 @@
+---
+- name: Create kubernetes directory
+  file:
+    path: '{{ item }}'
+    state: directory
+    mode: 0755
+  with_items:
+    - /etc/kubernetes
+
+- name: Copy kubeadm-config.yaml
+  copy:
+    src: "{{ role_path }}/files/kubeadm-config-for-master.yaml"
+    dest: "/etc/kubernetes/kubeadm-config.yaml"
+    mode: 0644
+
+- name: Cleanup node
+  command: kubeadm reset -f
+
+- name: Initialize k8s master
+  command: kubeadm init --config=/etc/kubernetes/kubeadm-config.yaml --upload-certs
+

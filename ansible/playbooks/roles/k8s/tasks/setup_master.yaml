@@ -1,0 +1,33 @@
+---
+- name: Create root kube config dir
+  file:
+    path: '{{ item }}'
+    state: directory
+    mode: 0755
+  with_items:
+    - /root/.kube
+  
+- import_role:
+    name: k8s
+    tasks_from: initialize_master
+  
+- name: Delete existing config files
+  file:
+    path: '{{ item }}'
+    state: absent
+    mode: 0644
+  with_items:
+    - /root/.kube/config
+
+- name: Copy kube config
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /root/.kube/config
+    mode: 0644
+    remote_src: true
+
+- name: Restart kubelet
+  systemd:
+    name: kubelet
+    state: restarted
+    daemon-reload: true

@@ -22,5 +22,5 @@ ansible-playbook -i inventories/pve/ playbooks/k8s_master.yaml -u root --ask-bec
 Run the command to deploy k8s all slave node:
 
 ```
-ansible-playbook -i inventories/pve/ playbooks/k8s_master.yaml -u root --ask-become-pass
+ansible-playbook -i inventories/pve/ playbooks/k8s_slave.yaml -u root --ask-become-pass
 ```

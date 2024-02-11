@@ -1,0 +1,22 @@
+---
+- name: Create calicoctl dir
+  file:
+    path: '{{ item }}'
+    state: directory
+    mode: 0755
+  with_items:
+    - /usr/local/bin
+    - '{{ calicoctl_dir_path }}'
+
+- name: Download calicoctl
+  get_url: 
+    url: "{{ calicoctl_url }}"
+    dest: "{{ calicoctl_dir_path }}/calicoctl"
+    mode: 0755
+    force: true
+
+- name: Create symblink
+  file:
+    path: /usr/local/bin/calicoctl
+    src: "{{ calicoctl_dir_path }}/calicoctl"
+    state: link

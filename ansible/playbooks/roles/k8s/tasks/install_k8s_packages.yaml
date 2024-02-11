@@ -1,0 +1,52 @@
+---
+- name: Install k8s deps
+  apt:
+    name: '{{ packages }}'
+    state: present
+    install_recommends: false
+    force: true
+    update_cache: true
+  vars:
+    packages:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gpg
+
+- name: Add gpp key to fetch kubernetes
+  block:
+    - name: Add signing key
+      apt_key:
+        url: https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key
+        keyring: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+        state: present
+
+    - name: Add Kubernetes repository to apt sources
+      lineinfile:
+        path: /etc/apt/sources.list.d/kubernetes.list
+        line: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] \
+               https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /"
+        create: yes
+
+- name: Install kubeadm, kubelet, kubectl
+  apt:
+    name: '{{ packages }}'
+    state: present
+    install_recommends: false
+    force: true
+    update_cache: true
+  vars:
+    packages:
+      - kubeadm 
+      - kubelet
+      - kubectl
+
+# Hold the installed packages to prevent automatic updates
+- name: Hold Kubernetes packages
+  dpkg_selections:
+    name: "{{ item }}"
+    selection: hold
+  with_items:
+    - kubelet
+    - kubeadm
+    - kubectl

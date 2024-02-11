@@ -1,0 +1,11 @@
+---
+- name: Copy join cluster script from k8s master
+  copy:
+    src: "{{ join_cluster_script }}"
+    dest: "{{ join_cluster_script }}"
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Join cluster
+  shell: "{{ join_cluster_script }}"

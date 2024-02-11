@@ -1,0 +1,3 @@
+---
+- name: Install calico
+  command: "kubectl apply -f {{ calico_config_yaml_url }}"

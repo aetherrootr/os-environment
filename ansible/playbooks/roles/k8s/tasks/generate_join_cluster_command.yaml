@@ -1,0 +1,15 @@
+---
+- name: Generate join cluster command
+  command: "sudo kubeadm token create --print-join-command"
+  register: generate_join_cluster_command_output
+
+- name: Write output to file
+  copy:
+    content: "{{ generate_join_cluster_command_output.stdout }}"
+    dest: "{{ join_cluster_script }}"
+
+- name: Fetch join cluster script to local
+  fetch:
+    src: "{{ join_cluster_script }}"
+    dest: "{{ join_cluster_script }}"
+    flat: yes

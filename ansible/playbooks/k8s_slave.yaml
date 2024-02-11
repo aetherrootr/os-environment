@@ -1,0 +1,20 @@
+---
+- hosts: k8s-master
+  become: true
+  become_user: root
+  tasks:
+    - import_role:
+        name: k8s
+        tasks_from: generate_join_cluster_command
+
+- hosts: k8s-node
+  become: true
+  become_user: root
+  tasks:
+    - import_role:
+        name: k8s
+        tasks_from: common
+
+    - import_role:
+        name: k8s
+        tasks_from: join_cluster

@@ -1,0 +1,30 @@
+---
+- hosts: localhost
+  connection: local
+  become: true
+  become_user: aether
+  tasks:
+    - name: Create kube config dir
+      file:
+        path: '{{ item }}'
+        state: directory
+        mode: 0755
+      with_items:
+        - "{{ kube_config_dir }}"
+
+    - name: Delete existing config files
+      file:
+        path: '{{ item }}'
+        state: absent
+      with_items:
+        - "{{ kube_config_dir }}"
+
+- hosts: k8s-master
+  become_user: root
+  become: true
+  tasks:
+    - name: Fetch k8s config
+      fetch:
+        src: /etc/kubernetes/admin.conf
+        dest: "{{ kube_config_dir }}/config"
+        flat: yes

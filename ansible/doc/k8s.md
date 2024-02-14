@@ -24,3 +24,11 @@ Run the command to deploy k8s all slave node:
 ```
 ansible-playbook -i inventories/pve/ playbooks/k8s_slave.yaml -u root --ask-become-pass
 ```
+
+## local machine
+
+Run the command to prepare local dev env:
+```
+bash ../run_ansible.sh
+ansible-playbook -i "localhost," -i inventories/pve/ playbooks/fetch_k8s_config.yaml -u root --ask-become-pass -e "kube_config_dir=$HOME/.kube"
+```

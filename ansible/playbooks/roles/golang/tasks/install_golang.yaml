@@ -1,0 +1,21 @@
+---
+- name: Remove old golang
+  file:
+    state: absent
+    path: /usr/local/go
+
+- name: Download and extract Go binary
+  get_url:
+    url: "https://go.dev/dl/go{{ golang_version }}.linux-amd64.tar.gz"
+    dest: "/tmp/go{{ golang_version }}.tar.gz"
+
+- name: Extract Go binary
+  unarchive:
+    src: "/tmp/go{{ golang_version }}.tar.gz"
+    dest: "/usr/local"
+
+- name: Add Go binaries to PATH
+  lineinfile:
+    path: "/etc/profile"
+    line: 'export PATH="$PATH:/usr/local/go/bin"'
+    create: yes

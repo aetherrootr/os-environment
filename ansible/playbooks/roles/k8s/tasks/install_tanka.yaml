@@ -1,0 +1,56 @@
+---
+- import_role:
+    name: utils
+    tasks_from: read_system_info
+
+- name: install jsonnet bundler
+  get_url:
+    url: https://github.com/jsonnet-bundler/jsonnet-bundler/releases/latest/download/jb-linux-amd64
+    dest: /usr/local/bin/jb
+    mode: 755
+
+- name: add helm keyring
+  block:
+    - name: Install add keyring deps
+      apt:
+        name: '{{ packages }}'
+        state: present
+        install_recommends: false
+        force: true
+        update_cache: true
+      vars:
+        packages:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gpg
+
+    - name: Add signing key
+      apt_key:
+        url: https://baltocdn.com/helm/signing.asc
+        keyring: /etc/apt/keyrings/helm.gpg
+        state: present
+
+    - name: Add Kubernetes repository to apt sources
+      lineinfile:
+        path: /etc/apt/sources.list.d/helm.list
+        line: "deb [arch={{ dep_architecture }} signed-by=/etc/apt/keyrings/helm.gpg] \
+               https://baltocdn.com/helm/stable/debian/ all main"
+        create: yes
+
+- name: install helm
+  apt:
+    name: '{{ packages }}'
+    state: present
+    install_recommends: false
+    force: true
+    update_cache: true
+  vars:
+    packages:
+      - helm
+
+- name: install tanka
+  get_url:
+    url: https://github.com/grafana/tanka/releases/latest/download/tk-linux-amd64
+    dest: /usr/local/bin/tk
+    mode: 755

@@ -1,9 +1,9 @@
 ---
-import_role:
-  name: k8s
-  tasks_from: add_k8s_keyring
+- import_role:
+    name: k8s
+    tasks_from: add_k8s_keyring
 
-- name: Install kubeadm, kubelet, kubectl
+- name: Install kubectl
   apt:
     name: '{{ packages }}'
     state: present
@@ -12,16 +12,12 @@ import_role:
     update_cache: true
   vars:
     packages:
-      - kubeadm 
-      - kubelet
       - kubectl
 
-# Hold the installed packages to prevent automatic updates
-- name: Hold Kubernetes packages
+# Hold the kubectl to prevent automatic updates
+- name: Hold kubectl
   dpkg_selections:
     name: "{{ item }}"
     selection: hold
   with_items:
-    - kubelet
-    - kubeadm
     - kubectl

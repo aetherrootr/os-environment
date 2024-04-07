@@ -3,9 +3,8 @@
   "dependencies": [
     {
       "source": {
-        "git": {
-          "remote": "https://github.com/grafana/jsonnet-libs.git",
-          "subdir": "tanka-util"
+        "local": {
+          "directory": "../common"
         }
       },
       "version": "master"

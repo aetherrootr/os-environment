@@ -1,7 +1,6 @@
 local tanka = import 'github.com/grafana/jsonnet-libs/tanka-util/main.libsonnet';
 
 {
-
 importFromHelmChart(projectPath,
                     name,
                     chart,
@@ -11,5 +10,4 @@ importFromHelmChart(projectPath,
         chart,
         conf,
     ),
-
 }

@@ -1,0 +1,4 @@
+.vscode
+
+kubernetes/**/vendor
+kubernetes/**/charts

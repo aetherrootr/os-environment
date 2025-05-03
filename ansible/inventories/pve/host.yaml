@@ -4,13 +4,13 @@ all:
       children:
         k8s-master:
           vars:
-            ansible_ssh_user: 'k8s-master'
+            ansible_ssh_user: 'aether'
           hosts:
-            192.168.8.145
+            k8s-master.corp.aetherrootr.com
         k8s-node:
           children:
             k8s-node-1:
               vars:
-                ansible_ssh_user: 'k8s-node-1'
+                ansible_ssh_user: 'aether'
               hosts:
-                192.168.8.200
+                k8s-node-1.corp.aetherrootr.com

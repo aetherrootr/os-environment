@@ -1,0 +1,6 @@
+---
+- name: Install ingress-nginx
+  command: "kubectl apply -f {{ ingress_nginx_url }}"
+
+- name: Install cert-manager
+  command: "kubectl apply -f {{ cert_manager_url }}"

@@ -38,14 +38,6 @@
       },
       "version": "84aed0f9591ba86a3035e7ebe3557cb012039890",
       "sum": "i2w3hGbgQmaB73t5LJHSioPOVdYv8ZBvivHiDwZJVyI="
-    },
-    {
-      "source": {
-        "local": {
-          "directory": "../utils"
-        }
-      },
-      "version": ""
     }
   ],
   "legacyImports": false

@@ -42,6 +42,14 @@
     {
       "source": {
         "local": {
+          "directory": "kubernetes-dashboard"
+        }
+      },
+      "version": ""
+    },
+    {
+      "source": {
+        "local": {
           "directory": "../utils"
         }
       },

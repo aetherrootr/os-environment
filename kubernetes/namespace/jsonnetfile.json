@@ -1,0 +1,13 @@
+{
+    "version": 1,
+    "dependencies": [
+      {
+        "source": {
+          "local": {
+            "directory": "kubernetes-dashboard"
+          }
+        }
+      }
+    ],
+    "legacyImports": true
+  }

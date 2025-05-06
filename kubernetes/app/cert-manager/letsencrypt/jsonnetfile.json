@@ -3,11 +3,11 @@
     "dependencies": [
       {
         "source": {
-          "local": {
-            "directory": "../../utils"
-          }
+            "local": {
+                "directory": "../../utils"
+            }
         }
       }
     ],
     "legacyImports": true
-  }
+}

@@ -87,4 +87,53 @@ local k = import 'common/lib/k.libsonnet';
         + (if name != null then $.tk.servicePort.withName(name) else {})
         + $.tk.servicePort.withProtocol(protocol)
         + (if nodePort != null then $.tk.servicePort.withNodePort(nodePort) else {}),
+    
+    generateIngressPath(urlPath, serviceName, port, pathType='ImplementationSpecific'):
+        $.tk.httpIngressPath.withPath(urlPath)
+        + $.tk.httpIngressPath.withPathType(pathType)
+        + $.tk.httpIngressPath.backend.service.withName(serviceName)
+        + $.tk.httpIngressPath.backend.service.port.withNumber(port),
+
+    generateIngress(namespace,
+                    appName,
+                    serviceName,
+                    annotations,
+                    port=null,
+                    hostnameList=[],
+                    certificateName=null,
+                    extraRules=[],
+                    extraPaths=['/'],
+                    extraGeneratedPaths=[],
+                    withCertManager=true,
+                    extraLabels={},
+                    ingressClass='nginx'):
+        $.tk.ingress.new(appName)
+        + defaultMetadata(appName, namespace, extraLabels)
+        + $.tk.ingress.spec.withIngressClassName(ingressClass)
+        + $.tk.ingress.metadata.withAnnotations(
+            annotations
+            + (if withCertManager then {
+            'cert-manager.io/cluster-issuer': 'letsencrypt-dns-cloudflare',
+            'cert-manager.io/common-name': hostnameList[0],
+            'nginx.ingress.kubernetes.io/ssl-redirect': 'true',
+            'nginx.ingress.kubernetes.io/force-ssl-redirect': 'true',
+            'nginx.ingress.kubernetes.io/use-port-in-redirects': 'true',
+            } else {})
+        )
+        + (if withCertManager then $.tk.ingress.spec.withTls([{
+            hosts: hostnameList,
+            secretName: if certificateName != null 
+                then certificateName else namespace + '-wildcard-certificate-tls',
+        }]) else {})
+        + $.tk.ingress.spec.withRules(extraRules + [
+            $.tk.ingressRule.withHost(hostname)
+            + $.tk.ingressRule.http.withPaths([
+                $.generateIngressPath(urlPath=path, serviceName=serviceName, port=port)
+                for path in extraPaths
+            ] + extraGeneratedPaths)
+            for hostname in hostnameList
+        ]),
+
+    getServiceHostname(serviceName):
+        serviceName + '.corp.aetherrootr.com',
 }

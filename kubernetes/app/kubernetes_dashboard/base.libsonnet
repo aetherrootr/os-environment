@@ -4,7 +4,9 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
     namespace:: 'kubernetes-dashboard',
     appName::'kubernetes-dashboard',
     replicas:: 1,
-    port:: 8443,
+    port:: 9090,
+    
+    local hosts = [k8sUtils.getServiceHostname(serviceName=$.appName)],
     
     local containerImage = 'kubernetesui/dashboard:v2.7.0',
 
@@ -12,7 +14,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
         containerName=$.appName,
         image=containerImage,
         ports = [
-            k8sUtils.generateContainerPort(name='http', containerPort=9090),
+            k8sUtils.generateContainerPort(name='http', containerPort=$.port),
         ],
         resources={
             requests: {
@@ -25,10 +27,8 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
             },
         },
         args=[
-            '--namespace=kubernetes-dashboard',
-            '--enable-skip-login',
             '--enable-insecure-login',
-            '--disable-settings-authorizer',
+            '--namespace=kubernetes-dashboard',
         ]
     ),
 
@@ -39,16 +39,23 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
             namespace=$.namespace,
             appName=$.appName,
             ports=[
-                k8sUtils.generateServicePort(name='http', port=$.port, targetPort=9090, nodePort=30000),
+                k8sUtils.generateServicePort(name='http', port=$.port, targetPort=$.port),
             ],
-            type='NodePort',
         ),
         k8sUtils.generateDeployment(
             namespace=$.namespace,
             appName=$.appName,
             containers=containers,
-            podSpec=k8sUtils.generatePodSpec(),
+            podSpec=k8sUtils.generatePodSpec(serviceAccountName=$.appName),
             replicas=$.replicas,
         ),
+        k8sUtils.generateIngress(
+            namespace=$.namespace,
+            appName=$.appName,
+            serviceName=$.appName,
+            annotations={},
+            port=$.port,
+            hostnameList=hosts,
+        )
     ]),
 }

@@ -4,10 +4,10 @@
       {
         "source": {
           "local": {
-            "directory": "../../utils"
+            "directory": "../utils"
           }
         }
       }
     ],
     "legacyImports": true
-  }
+}

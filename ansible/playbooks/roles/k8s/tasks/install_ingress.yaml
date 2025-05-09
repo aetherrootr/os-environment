@@ -2,5 +2,14 @@
 - name: Install ingress-nginx
   command: "kubectl apply -f {{ ingress_nginx_url }}"
 
+- name: Copy patched-ingress-nginx config
+  copy:
+    src: "{{ role_path }}/files/patched-ingress-nginx-controller.yaml"
+    dest: "/tmp/patched-ingress-nginx-controller.yaml"
+    mode: 0644
+
+- name: Apply patched-ingress-nginx config
+  command: "kubectl apply -f /tmp/patched-ingress-nginx-controller.yaml"
+
 - name: Install cert-manager
   command: "kubectl apply -f {{ cert_manager_url }}"

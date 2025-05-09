@@ -14,6 +14,7 @@ It is very easy to build a cluster using ansible scripts, just deploy the k8s-ma
 Run the command to deploy k8s master node:
 
 ```
+ansible-galaxy collection install kubernetes.core
 ansible-playbook -i inventories/pve/ playbooks/k8s_master.yaml -u root --ask-become-pass
 ```
 
@@ -31,4 +32,10 @@ Run the command to prepare local dev env:
 ```
 bash ../run_ansible.sh
 ansible-playbook -i "localhost," -i inventories/pve/ playbooks/fetch_k8s_config.yaml -u root --ask-become-pass -e "kube_config_dir=$HOME/.kube"
+```
+
+## haproxy
+We use haproxy to proxy external traffic for kubernetes. The configuration command is as follows：
+```
+ansible-playbook -i inventories/pve/ playbooks/edge-router.yaml -u root --ask-become-pass
 ```

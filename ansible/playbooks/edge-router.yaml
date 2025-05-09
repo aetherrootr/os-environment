@@ -1,0 +1,7 @@
+- hosts: edge-router
+  become: true
+  become_user: root
+  tasks:    
+    - import_role:
+        name: haproxy
+        tasks_from: install_haproxy

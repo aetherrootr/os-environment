@@ -10,15 +10,15 @@
     - import_role:
         name: k8s
         tasks_from: setup_master
-    
+
     - import_role:
         name: k8s
         tasks_from: install_calico
-    
+
     - import_role:
         name: k8s
         tasks_from: install_calicoctl
-    
+
     - import_role:
         name: k8s
         tasks_from: install_ingress

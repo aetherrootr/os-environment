@@ -14,3 +14,10 @@ all:
                 ansible_ssh_user: 'aether'
               hosts:
                 k8s-node-1.corp.aetherrootr.com
+    edge-router:
+      children:
+        edge-router:
+          vars:
+            ansible_ssh_user: 'aether'
+          hosts:
+            edge-router.corp.aetherrootr.com

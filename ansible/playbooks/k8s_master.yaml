@@ -2,23 +2,7 @@
 - hosts: k8s-master
   become: true
   become_user: root
-  tasks:
-    - import_role:
-        name: k8s
-        tasks_from: common
-
-    - import_role:
-        name: k8s
-        tasks_from: setup_master
-    
-    - import_role:
-        name: k8s
-        tasks_from: install_calico
-    
-    - import_role:
-        name: k8s
-        tasks_from: install_calicoctl
-    
+  tasks:    
     - import_role:
         name: k8s
         tasks_from: install_ingress

@@ -1,0 +1,24 @@
+---
+- name: Install HAProxy
+  apt:
+    name: haproxy
+    state: present
+    install_recommends: false
+    force: true
+    update_cache: true
+  
+- name: Set capability for haproxy to bind low ports
+  command: setcap "cap_net_bind_service=+ep" /usr/sbin/haproxy
+
+- name: Configure HAProxy
+  copy:
+    src: "{{ role_path }}/files/haproxy.cfg"
+    dest: /etc/haproxy/haproxy.cfg
+    mode: 0644
+  notify: restart haproxy
+
+- name: Enable and start haproxy
+  systemd:
+    name: haproxy
+    enabled: true
+    state: started

@@ -88,11 +88,11 @@ local k = import 'common/lib/k.libsonnet';
         + $.tk.servicePort.withProtocol(protocol)
         + (if nodePort != null then $.tk.servicePort.withNodePort(nodePort) else {}),
     
-    generateIngressPath(urlPath, serviceName, port, pathType='ImplementationSpecific'):
+    generateIngressPath(urlPath, serviceName, servicePort, pathType='ImplementationSpecific'):
         $.tk.httpIngressPath.withPath(urlPath)
         + $.tk.httpIngressPath.withPathType(pathType)
         + $.tk.httpIngressPath.backend.service.withName(serviceName)
-        + $.tk.httpIngressPath.backend.service.port.withNumber(port),
+        + $.tk.httpIngressPath.backend.service.port.withNumber(servicePort),
 
     generateIngress(namespace,
                     appName,
@@ -130,7 +130,7 @@ local k = import 'common/lib/k.libsonnet';
         + $.tk.ingress.spec.withRules(extraRules + [
             $.tk.ingressRule.withHost(hostname)
             + $.tk.ingressRule.http.withPaths([
-                $.generateIngressPath(urlPath=path, serviceName=serviceName, port=port)
+                $.generateIngressPath(urlPath=path, serviceName=serviceName, servicePort=port)
                 for path in extraPaths
             ] + extraGeneratedPaths)
             for hostname in hostnameList

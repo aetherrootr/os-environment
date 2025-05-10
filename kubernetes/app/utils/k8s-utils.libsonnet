@@ -16,8 +16,8 @@ local k = import 'common/lib/k.libsonnet';
 
     generateContainers(containerName,
                        image,
-                       args,
                        resources,
+                       args=null,
                        env=null,
                        ports = null,
                        volumeMounts = null):
@@ -113,17 +113,19 @@ local k = import 'common/lib/k.libsonnet';
         + $.tk.ingress.metadata.withAnnotations(
             annotations
             + (if withCertManager then {
-            'cert-manager.io/cluster-issuer': 'letsencrypt-dns-cloudflare',
-            'cert-manager.io/common-name': hostnameList[0],
-            'nginx.ingress.kubernetes.io/ssl-redirect': 'true',
-            'nginx.ingress.kubernetes.io/force-ssl-redirect': 'true',
-            'nginx.ingress.kubernetes.io/use-port-in-redirects': 'true',
-            } else {})
+                'nginx.ingress.kubernetes.io/ssl-redirect': 'true',
+                'nginx.ingress.kubernetes.io/force-ssl-redirect': 'true',
+                'nginx.ingress.kubernetes.io/use-port-in-redirects': 'true',
+            } + (if certificateName == null then {
+                'cert-manager.io/cluster-issuer': 'letsencrypt-dns-cloudflare',
+                'cert-manager.io/common-name': hostnameList[0],
+            } else {}) 
+            else {})
         )
         + (if withCertManager then $.tk.ingress.spec.withTls([{
             hosts: hostnameList,
             secretName: if certificateName != null 
-                then certificateName else namespace + '-wildcard-certificate-tls',
+                then certificateName else appName + '-certificate-tls',
         }]) else {})
         + $.tk.ingress.spec.withRules(extraRules + [
             $.tk.ingressRule.withHost(hostname)
@@ -136,4 +138,7 @@ local k = import 'common/lib/k.libsonnet';
 
     getServiceHostname(serviceName):
         serviceName + '.corp.aetherrootr.com',
+    
+    getWildcardCertificateName(namespace):
+        namespace + '-wildcard-certificate-tls',
 }

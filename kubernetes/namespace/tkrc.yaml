@@ -1,4 +1,0 @@
-apiVersion: tanka.dev/v1alpha1
-kind: TankaProject
-spec:
-  environments: .

@@ -13,10 +13,6 @@ usage() {
   exit 1
 }
 
-# Default values
-NAMESPACE="kubernetes-dashboard"
-SECRET_NAME="kubernetes-dashboard-csrf"
-
 # Parse arguments
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -49,7 +45,21 @@ if [ -z "$TOKEN" ]; then
   usage
 fi
 
-TOKEN_TYPE=${TOKEN_TYPE:-csrf}
+if [ -z "$NAMESPACE" ]; then
+  echo "Error: namespace is required. Use --namespace."
+  usage
+fi
+
+if [ -z "$SECRET_NAME" ]; then
+  echo "Error: secret name is required. Use --name."
+  usage
+fi
+
+if [ -z "$TOKEN_TYPE" ]; then
+  echo "Warning: token type is not specified. Defaulting to 'csrf'."
+  TOKEN_TYPE="csrf"
+fi
+
 
 # Delete existing secret if it exists
 echo "Deleting existing secret '$SECRET_NAME' in namespace '$NAMESPACE' (if it exists)..."

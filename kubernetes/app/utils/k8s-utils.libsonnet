@@ -35,11 +35,13 @@ local k = import "common/lib/k.libsonnet";
                      image,
                      resources,
                      args=null,
+                     command=null,
                      env=null,
                      ports=null,
                      volumeMounts=null):
     $.tk.container.new(containerName, image)
     + (if args != null then $.tk.container.withArgs(args) else {})
+    + (if command != null then $.tk.container.withCommand(command) else {})
     + $.tk.container.resources.withRequests(resources.requests)
     + $.tk.container.resources.withLimits(resources.limits)
     + (if env != null then $.tk.container.withEnv(env) else {})

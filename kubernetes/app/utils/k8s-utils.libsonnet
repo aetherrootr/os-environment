@@ -141,4 +141,19 @@ local k = import 'common/lib/k.libsonnet';
     
     getWildcardCertificateName(namespace):
         namespace + '-wildcard-certificate-tls',
+    
+    generateNfsVolume(name, nfsServer, path, readOnly=false):
+        $.tk.volume.withName(name)
+        + $.tk.volume.nfs.withServer(nfsServer)
+        + $.tk.volume.nfs.withPath(path)
+        + $.tk.volume.nfs.withReadOnly(readOnly),
+    
+    generateVolumeMount(name, mountPath, readOnly=false):
+        $.tk.volumeMount.new(name, mountPath, readOnly),
+
+    getNfsUrl(nfsName):
+        nfsName + '_nfs.corp.aetherrootr.com',
+    
+    getNfsPath(nfsName, appName):
+        '/media/' + nfsName + '/' + std.strReplace(appName, '-', '_'),
 }

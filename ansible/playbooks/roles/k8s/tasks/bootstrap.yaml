@@ -38,3 +38,14 @@
     regexp: '^(\s*)([^#\n]+\s+)(\w+\s+)swap(\s+.*)$'
     replace: '#\1\2\3swap\4'
     backup: yes
+
+- name: Install required packages
+  apt:
+    name: '{{ packages }}'
+    state: present
+    install_recommends: false
+    force: true
+    update_cache: true
+  vars:
+    packages:
+      - nfs-common

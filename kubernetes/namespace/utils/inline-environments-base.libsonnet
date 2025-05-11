@@ -1,11 +1,11 @@
 // ref: https://tanka.dev/inline-environments
 {
-  deployTarget:: error 'data is not set',
+  deployTarget:: error "data is not set",
   apiServer:: "https://k8s-master.corp.aetherrootr.com:6443",
-  metadataName:: 'namespace-list',
+  metadataName:: "namespace-list",
 
-  apiVersion: 'tanka.dev/v1alpha1',
-  kind: 'Environment',
+  apiVersion: "tanka.dev/v1alpha1",
+  kind: "Environment",
   metadata: {
     name: $.metadataName,
   },

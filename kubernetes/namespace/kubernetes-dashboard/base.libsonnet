@@ -1,5 +1,5 @@
-local namespaceUtils = import '../utils/namespace-utils.libsonnet';
+local namespaceUtils = import "../utils/namespace-utils.libsonnet";
 
 {
-    namespace: namespaceUtils.generateNamespace('kubernetes-dashboard'),
+  namespace: namespaceUtils.generateNamespace("kubernetes-dashboard"),
 }

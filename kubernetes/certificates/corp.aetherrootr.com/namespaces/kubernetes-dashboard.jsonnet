@@ -1,10 +1,10 @@
-local base = import '../base.libsonnet';
-local env = import 'utils/inline-environments-base.libsonnet';
+local base = import "../base.libsonnet";
+local env = import "utils/inline-environments-base.libsonnet";
 
-env{
-    namespace:: 'kubernetes-dashboard',
+env {
+  namespace:: "kubernetes-dashboard",
 
-    deployTarget: base{
-        namespace: $.namespace,
-    }
+  deployTarget: base {
+    namespace: $.namespace,
+  },
 }

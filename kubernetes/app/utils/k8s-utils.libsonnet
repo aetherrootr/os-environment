@@ -72,6 +72,26 @@ local k = import "common/lib/k.libsonnet";
         },
       },
     },
+  
+  generateStatefulSet(namespace,
+                      appName,
+                      podSpec,
+                      containers,
+                      replicas=1,
+                      annotations=null,
+                      extraLabels={}):
+    $.tk.statefulSet.new(appName, replicas, containers)
+    + defaultMetadata(appName, namespace, extraLabels)
+    + $.tk.statefulSet.spec.selector.withMatchLabels({ app: appName })
+    + $.tk.statefulSet.spec.template.metadata.withLabels({ app: appName } + extraLabels)
+    + (if annotations != null then $.tk.statefulSet.spec.template.metadata.withAnnotations(annotations) else {})
+    + {
+      spec+: {
+        template+: {
+          spec+: podSpec,
+        },
+      },
+    },
 
   generatePodSpec(
     volumes=null,

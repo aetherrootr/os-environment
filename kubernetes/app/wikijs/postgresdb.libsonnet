@@ -55,7 +55,7 @@ local k8sUtils = import "utils/k8s-utils.libsonnet";
         k8sUtils.generateServicePort(name="http", port=$.databasePort, targetPort=$.databasePort),
       ],
     ),
-    k8sUtils.generateDeployment(
+    k8sUtils.generateStatefulSet(
       namespace=$.namespace,
       appName=$.databaseHost,
       containers=containers,

@@ -2,7 +2,7 @@ local k8sUtils = import "utils/k8s-utils.libsonnet";
 
 {
     local chartPath = './charts/sm-operator',
-    appName:: 'bitwarden-secrets-manager',
+    appName:: 'bw-sm-op',
     namespace:: 'bitwarden-secrets-manager',
 
 

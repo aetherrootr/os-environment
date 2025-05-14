@@ -3,7 +3,7 @@ local env = import "utils/inline-environments-base.libsonnet";
 
 env {
   namespace:: "bitwarden-secrets-manager",
-  appName:: "smop",
+  appName:: "bw-sm-op",
 
   deployTarget: base {
     appName: $.appName,

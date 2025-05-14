@@ -1,4 +1,5 @@
 local k = import "common/lib/k.libsonnet";
+local tankaUtils = import "common/lib/tanka-utils.libsonnet";
 
 {
   local defaultMetadata(appName, namespace, extraLabels={}) = {
@@ -72,7 +73,7 @@ local k = import "common/lib/k.libsonnet";
         },
       },
     },
-  
+
   generateStatefulSet(namespace,
                       appName,
                       podSpec,
@@ -207,4 +208,12 @@ local k = import "common/lib/k.libsonnet";
     key: key,
     path: path,
   },
+
+  importFromHelmChart(projectPath,
+                      name,
+                      chart,
+                      config={}):
+    tankaUtils.helm.new(projectPath).template(
+      name, chart, config
+    ),
 }

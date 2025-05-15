@@ -5,11 +5,10 @@ local k8sUtils = import "utils/k8s-utils.libsonnet";
   appName:: error ("appName is required"),
   replicas:: 1,
   port:: 8067,
-  certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
   local nfsName = "service_data",
   local nfsServer = k8sUtils.getNfsUrl(nfsName),
-  local nfsPath = k8sUtils.getNfsPath(nfsName, $.appName),
+  local nfsPath = k8sUtils.getServiceDataNfsPath(nfsName, $.appName),
 
   local containerImage = "aethertaberu/golinks:latest",
   local hosts = [k8sUtils.getServiceHostname(serviceName="go"), "go"],

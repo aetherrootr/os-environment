@@ -14,7 +14,7 @@ local k8sUtils = import "utils/k8s-utils.libsonnet";
 
   local nfsName = "service_data",
   local nfsServer = k8sUtils.getNfsUrl(nfsName),
-  local nfsPath = k8sUtils.getNfsPath(nfsName, $.appName) + "/token",
+  local nfsPath = k8sUtils.getServiceDataNfsPath(nfsName, $.appName) + "/token",
 
   local hosts = [k8sUtils.getServiceHostname(serviceName="wiki")],
 

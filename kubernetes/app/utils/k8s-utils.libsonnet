@@ -196,8 +196,8 @@ local tankaUtils = import "common/lib/tanka-utils.libsonnet";
   getNfsUrl(nfsName):
     nfsName + "_nfs.corp.aetherrootr.com",
 
-  getNfsPath(nfsName, appName):
-    "/media/" + nfsName + "/" + std.strReplace(appName, "-", "_"),
+  getServiceDataNfsPath(nfsName, appName=""):
+    "/media/" + nfsName + (if appName != "" then "/" + std.strReplace(appName, "-", "_") else ""),
 
   generateConfigMapVolume(name, configMapName, items=[]):
     $.tk.volume.withName(name)

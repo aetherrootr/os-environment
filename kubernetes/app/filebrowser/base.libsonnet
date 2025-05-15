@@ -7,12 +7,15 @@ local k8sUtils = import "utils/k8s-utils.libsonnet";
   port:: 8080,
   certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
-  local nfsName = "service_data",
-  local nfsServer = k8sUtils.getNfsUrl(nfsName),
-  local nfsPath = k8sUtils.getServiceDataNfsPath(nfsName, $.appName),
+  local configNfsName = "service_data",
+  local configNfsServer = k8sUtils.getNfsUrl(configNfsName),
+  local configNfsPath = k8sUtils.getServiceDataNfsPath(configNfsName, $.appName),
+  local dataNfsName = "data0",
+  local dataNfsServer = k8sUtils.getNfsUrl(dataNfsName),
+  local dataNfsPath = "/mnt/data0",
 
-  local containerImage = "aethertaberu/sub-cache:latest",
-  local hosts = [k8sUtils.getServiceHostname(serviceName=$.appName)],
+  local containerImage = "hurlenko/filebrowser:latest",
+  local hosts = [k8sUtils.getServiceHostname(serviceName="files")],
 
 
   local containers = k8sUtils.generateContainers(
@@ -28,15 +31,23 @@ local k8sUtils = import "utils/k8s-utils.libsonnet";
       },
       limits: {
         cpu: "500m",
-        memory: "256Mi",
+        memory: "1Gi",
       },
     },
     volumeMounts=[
       k8sUtils.generateVolumeMount(
-        name=$.appName + "-data-nfs",
+        name=$.appName + "-config-nfs",
         mountPath="/config",
       ),
+      k8sUtils.generateVolumeMount(
+        name=$.appName + "-data-nfs",
+        mountPath="/data",
+      )
     ],
+    env=[
+      k8sUtils.generateEnv("FB_BASEURL", "/filebrowser"),
+      k8sUtils.generateEnv("TZ", "Asia/Shanghai"),
+    ]
   ),
 
   apiVersion: "apps/v1",
@@ -56,10 +67,15 @@ local k8sUtils = import "utils/k8s-utils.libsonnet";
       podSpec=k8sUtils.generatePodSpec(
         volumes=[
           k8sUtils.generateNfsVolume(
-            name=$.appName + "-data-nfs",
-            nfsServer=nfsServer,
-            path=nfsPath,
+            name=$.appName + "-config-nfs",
+            nfsServer=configNfsServer,
+            path=configNfsPath,
           ),
+          k8sUtils.generateNfsVolume(
+            name=$.appName + "-data-nfs",
+            nfsServer=dataNfsServer,
+            path=dataNfsPath,
+          )
         ],
       ),
       replicas=$.replicas,

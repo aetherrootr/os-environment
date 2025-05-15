@@ -196,7 +196,7 @@ local tankaUtils = import "common/lib/tanka-utils.libsonnet";
   getNfsUrl(nfsName):
     nfsName + "_nfs.corp.aetherrootr.com",
 
-  getNfsPath(nfsName, appName):
+  getServiceDataNfsPath(nfsName, appName):
     "/media/" + nfsName + "/" + std.strReplace(appName, "-", "_"),
 
   generateConfigMapVolume(name, configMapName, items=[]):

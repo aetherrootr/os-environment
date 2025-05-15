@@ -28,7 +28,7 @@ EOF
 
 mkdir -p "env"
 
-/usr/local/bin/jb install
+jb install
 
 popd
 

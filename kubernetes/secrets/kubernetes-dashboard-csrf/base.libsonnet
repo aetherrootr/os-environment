@@ -1,7 +1,7 @@
 local secretUtils = import 'utils/secret-utils.libsonnet';
 
 {
-  namespace:: 'kubernetes-dashboard',
+  namespace:: error ('namespace is required'),
 
   apiVersion: 'apps/v1',
   kind: 'list',

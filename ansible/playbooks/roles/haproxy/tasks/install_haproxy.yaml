@@ -1,4 +1,8 @@
 ---
+- import_role:
+    name: haproxy
+    tasks_from: setup_network
+
 - name: Install HAProxy
   apt:
     name: haproxy

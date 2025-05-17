@@ -113,12 +113,16 @@ local tankaUtils = import 'common/lib/tanka-utils.libsonnet';
     + (if nodeName != null then $.tk.podSpec.withNodeName(nodeName) else {})
     + (if serviceAccountName != null then $.tk.podSpec.withServiceAccountName(serviceAccountName) else {}),
 
-  generateService(namespace, appName, ports, type='ClusterIP', clusterIP=null, extraLabels={}):
+  generateService(namespace,
+                  appName,
+                  ports,
+                  type='ClusterIP',
+                  clusterIP=null,
+                  extraLabels={},
+                  selector={ app: appName }):
     $.tk.service.new(
       appName,
-      selector={
-        app: appName,
-      },
+      selector=selector,
       ports=ports
     )
     + $.tk.service.spec.withType(type)
@@ -193,6 +197,11 @@ local tankaUtils = import 'common/lib/tanka-utils.libsonnet';
     + $.tk.volume.nfs.withServer(nfsServer)
     + $.tk.volume.nfs.withPath(path)
     + $.tk.volume.nfs.withReadOnly(readOnly),
+
+  generateHostPathVolume(name, path, type):
+    $.tk.volume.withName(name)
+    + $.tk.volume.hostPath.withPath(path)
+    + $.tk.volume.hostPath.withType(type),
 
   generateVolumeMount(name, mountPath, readOnly=false, subPath=null):
     $.tk.volumeMount.new(name, mountPath, readOnly)

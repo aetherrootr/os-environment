@@ -1,0 +1,21 @@
+---
+- name: Configure netplan
+  copy:
+    src: "{{ role_path }}/files/netplan-config.yaml"
+    dest: /etc/netplan/00-installer-config.yaml
+    mode: 0600
+
+- name: apply netplan
+  command: netplan apply
+
+- name: Configure sshd
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?ListenAddress'
+    line: 'ListenAddress 192.168.8.205'
+    state: present
+
+- name: restart sshd
+  systemd:
+    name: sshd
+    state: restarted

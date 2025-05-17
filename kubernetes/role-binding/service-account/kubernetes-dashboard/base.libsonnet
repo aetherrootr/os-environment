@@ -1,15 +1,15 @@
-local roleBindingUtils = import "utils/role-binding-utils.libsonnet";
-local serviceAccountUtils = import "utils/service-account-utils.libsonnet";
+local roleBindingUtils = import 'utils/role-binding-utils.libsonnet';
+local serviceAccountUtils = import 'utils/service-account-utils.libsonnet';
 
 {
-  appName:: error "appName is required",
-  namespace:: error "namespace is required",
+  appName:: error 'appName is required',
+  namespace:: error 'namespace is required',
 
   local serviceAccount = serviceAccountUtils.generateServiceAccount($.appName, $.namespace),
-  local clusterRoleRef = roleBindingUtils.generateRoleRef(roleRefName="cluster-admin", roleRefKind="ClusterRole"),
+  local clusterRoleRef = roleBindingUtils.generateRoleRef(roleRefName='cluster-admin', roleRefKind='ClusterRole'),
 
-  apiVersion: "apps/v1",
-  kind: "list",
+  apiVersion: 'apps/v1',
+  kind: 'list',
   items: std.prune([
     serviceAccount,
     roleBindingUtils.generateRoleBinding(

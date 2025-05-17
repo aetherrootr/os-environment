@@ -1,13 +1,13 @@
-local k8sUtils = import "utils/k8s-utils.libsonnet";
+local k8sUtils = import 'utils/k8s-utils.libsonnet';
 
 {
-  namespace:: error ("namespace is required"),
-  appName:: error ("appName is required"),
+  namespace:: error ('namespace is required'),
+  appName:: error ('appName is required'),
   replicas:: 1,
   port:: 80,
   certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
-  local containerImage = "corentinth/it-tools:latest",
+  local containerImage = 'corentinth/it-tools:latest',
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.appName)],
 
 
@@ -15,28 +15,28 @@ local k8sUtils = import "utils/k8s-utils.libsonnet";
     containerName=$.appName,
     image=containerImage,
     ports=[
-      k8sUtils.generateContainerPort(name="http", containerPort=$.port),
+      k8sUtils.generateContainerPort(name='http', containerPort=$.port),
     ],
     resources={
       requests: {
-        cpu: "10m",
-        memory: "20Mi",
+        cpu: '10m',
+        memory: '20Mi',
       },
       limits: {
-        cpu: "200m",
-        memory: "128Mi",
+        cpu: '200m',
+        memory: '128Mi',
       },
     },
   ),
 
-  apiVersion: "apps/v1",
-  kind: "list",
+  apiVersion: 'apps/v1',
+  kind: 'list',
   items: std.prune([
     k8sUtils.generateService(
       namespace=$.namespace,
       appName=$.appName,
       ports=[
-        k8sUtils.generateServicePort(name="http", port=$.port, targetPort=$.port),
+        k8sUtils.generateServicePort(name='http', port=$.port, targetPort=$.port),
       ],
     ),
     k8sUtils.generateDeployment(

@@ -1,11 +1,11 @@
-local k = import "common/lib/k.libsonnet";
+local k = import 'common/lib/k.libsonnet';
 
 {
   tk: (k.rbac.v1),
 
   generateRoleBinding(namespace, roleBindingName, serviceAccount, roleRef): {
-    apiVersion: "rbac.authorization.k8s.io/v1",
-    kind: "ClusterRoleBinding",
+    apiVersion: 'rbac.authorization.k8s.io/v1',
+    kind: 'ClusterRoleBinding',
     metadata: {
       name: roleBindingName,
     } + (if namespace != null then { namespace: namespace } else {}),
@@ -16,14 +16,14 @@ local k = import "common/lib/k.libsonnet";
     },
     subjects: [
       {
-        kind: "ServiceAccount",
+        kind: 'ServiceAccount',
         name: serviceAccount.metadata.name,
         namespace: serviceAccount.metadata.namespace,
       },
     ],
   },
 
-  generateRoleRef(roleRefName, roleRefKind, roleApiGroup="rbac.authorization.k8s.io"):
+  generateRoleRef(roleRefName, roleRefKind, roleApiGroup='rbac.authorization.k8s.io'):
     $.tk.roleRef.withName(roleRefName)
     + $.tk.roleRef.withKind(roleRefKind)
     + $.tk.roleRef.withApiGroup(roleApiGroup),

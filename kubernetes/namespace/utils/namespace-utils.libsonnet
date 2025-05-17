@@ -1,4 +1,4 @@
-local k = import "common/lib/k.libsonnet";
+local k = import 'common/lib/k.libsonnet';
 
 {
   tk: (k.core.v1),

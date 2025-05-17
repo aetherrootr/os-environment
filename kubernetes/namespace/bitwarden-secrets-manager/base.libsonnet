@@ -1,5 +1,5 @@
-local namespaceUtils = import "../utils/namespace-utils.libsonnet";
+local namespaceUtils = import '../utils/namespace-utils.libsonnet';
 
 {
-  namespace: namespaceUtils.generateNamespace("bitwarden-secrets-manager"),
+  namespace: namespaceUtils.generateNamespace('bitwarden-secrets-manager'),
 }

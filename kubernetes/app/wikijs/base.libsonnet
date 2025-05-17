@@ -1,14 +1,14 @@
-local postgresdb = import "postgresdb.libsonnet";
-local wikijs = import "wikijs.libsonnet";
+local postgresdb = import 'postgresdb.libsonnet';
+local wikijs = import 'wikijs.libsonnet';
 
 {
-  namespace:: error ("namespace is required"),
-  appName:: error ("appName is required"),
-  databaseHost:: $.appName + "-postgresdb",
+  namespace:: error ('namespace is required'),
+  appName:: error ('appName is required'),
+  databaseHost:: $.appName + '-postgresdb',
   databasePort:: 5432,
-  databaseName:: "wiki",
-  databaseUser:: "wikijs",
-  databasePasswordSecretName:: "wikijs-postgresdb-secret",
+  databaseName:: 'wiki',
+  databaseUser:: 'wikijs',
+  databasePasswordSecretName:: 'wikijs-postgresdb-secret',
 
   local wikijsResources = wikijs {
     namespace: $.namespace,
@@ -31,8 +31,8 @@ local wikijs = import "wikijs.libsonnet";
   },
 
 
-  apiVersion: "apps/v1",
-  kind: "list",
+  apiVersion: 'apps/v1',
+  kind: 'list',
   items: std.prune(
     wikijsResources.wikijs + postgresdbResources.postgresdb,
   ),

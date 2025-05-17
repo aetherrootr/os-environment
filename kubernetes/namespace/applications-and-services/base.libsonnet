@@ -1,5 +1,5 @@
-local namespaceUtils = import "../utils/namespace-utils.libsonnet";
+local namespaceUtils = import '../utils/namespace-utils.libsonnet';
 
 {
-  namespace: namespaceUtils.generateNamespace("applications-and-services"),
+  namespace: namespaceUtils.generateNamespace('applications-and-services'),
 }

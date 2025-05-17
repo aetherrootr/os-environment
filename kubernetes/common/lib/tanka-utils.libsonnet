@@ -1,1 +1,1 @@
-import "github.com/grafana/jsonnet-libs/tanka-util/main.libsonnet"
+import 'github.com/grafana/jsonnet-libs/tanka-util/main.libsonnet'

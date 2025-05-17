@@ -1,8 +1,8 @@
-local base = import "../base.libsonnet";
-local env = import "utils/inline-environments-base.libsonnet";
+local base = import '../base.libsonnet';
+local env = import 'common/inline-environments-base.libsonnet';
 
 env {
-  namespace:: "cert-manager",
+  namespace:: 'cert-manager',
 
   deployTarget: base {
     namespace: $.namespace,

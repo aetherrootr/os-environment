@@ -1,54 +1,51 @@
-local k8sUtils = import "utils/k8s-utils.libsonnet";
+local k8sUtils = import 'utils/k8s-utils.libsonnet';
 
 {
-  namespace:: error ("namespace is required"),
-  appName:: error ("appName is required"),
+  namespace:: error ('namespace is required'),
+  appName:: error ('appName is required'),
   replicas:: 1,
   port:: 8067,
 
-  local nfsName = "service_data",
-  local nfsServer = k8sUtils.getNfsUrl(nfsName),
-  local nfsPath = k8sUtils.getServiceDataNfsPath(nfsName, $.appName),
-
-  local containerImage = "aethertaberu/golinks:latest",
-  local hosts = [k8sUtils.getServiceHostname(serviceName="go"), "go"],
+  local containerImage = 'aethertaberu/golinks:latest',
+  local hosts = [k8sUtils.getServiceHostname(serviceName='go'), 'go'],
 
 
   local containers = k8sUtils.generateContainers(
     containerName=$.appName,
     image=containerImage,
     ports=[
-      k8sUtils.generateContainerPort(name="http", containerPort=$.port),
+      k8sUtils.generateContainerPort(name='http', containerPort=$.port),
     ],
     resources={
       requests: {
-        cpu: "10m",
-        memory: "16Mi",
+        cpu: '10m',
+        memory: '16Mi',
       },
       limits: {
-        cpu: "200m",
-        memory: "256Mi",
+        cpu: '200m',
+        memory: '256Mi',
       },
     },
     volumeMounts=[
       k8sUtils.generateVolumeMount(
-        name=$.appName + "-data-nfs",
-        mountPath="/data",
+        name=$.appName + '-pvc',
+        mountPath='/data',
+        subPath=$.appName,
       ),
     ],
     env=[
-      k8sUtils.generateEnv("TZ", "Asia/Shanghai"),
+      k8sUtils.generateEnv('TZ', 'Asia/Shanghai'),
     ]
   ),
 
-  apiVersion: "apps/v1",
-  kind: "list",
+  apiVersion: 'apps/v1',
+  kind: 'list',
   items: std.prune([
     k8sUtils.generateService(
       namespace=$.namespace,
       appName=$.appName,
       ports=[
-        k8sUtils.generateServicePort(name="http", port=$.port, targetPort=$.port),
+        k8sUtils.generateServicePort(name='http', port=$.port, targetPort=$.port),
       ],
     ),
     k8sUtils.generateDeployment(
@@ -57,11 +54,15 @@ local k8sUtils = import "utils/k8s-utils.libsonnet";
       containers=containers,
       podSpec=k8sUtils.generatePodSpec(
         volumes=[
-          k8sUtils.generateNfsVolume(
-            name=$.appName + "-data-nfs",
-            nfsServer=nfsServer,
-            path=nfsPath,
-          ),
+          {
+            name: $.appName + '-pvc',
+            persistentVolumeClaim: {
+              claimName: k8sUtils.getPVCName(
+                storageClass='service-data',
+                namespace=$.namespace,
+              ),
+            },
+          },
         ],
       ),
       replicas=$.replicas,

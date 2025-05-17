@@ -1,9 +1,9 @@
-local base = import "../base.libsonnet";
-local env = import "utils/inline-environments-base.libsonnet";
+local base = import '../base.libsonnet';
+local env = import 'common/inline-environments-base.libsonnet';
 
 env {
-  namespace:: "applications-and-services",
-  appName:: "golinks",
+  namespace:: 'applications-and-services',
+  appName:: 'golinks',
 
   deployTarget: base {
     namespace: $.namespace,

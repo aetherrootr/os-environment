@@ -1,6 +1,7 @@
-local allNamespaces = import "all-namespaces.libsonnet";
-local env = import "utils/inline-environments-base.libsonnet";
+local allNamespaces = import 'all-namespaces.libsonnet';
+local env = import 'common/inline-environments-base.libsonnet';
 
 env {
+  namespace: 'default',
   deployTarget: allNamespaces,
 }

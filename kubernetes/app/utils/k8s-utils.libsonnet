@@ -1,5 +1,5 @@
-local k = import "common/lib/k.libsonnet";
-local tankaUtils = import "common/lib/tanka-utils.libsonnet";
+local k = import 'common/lib/k.libsonnet';
+local tankaUtils = import 'common/lib/tanka-utils.libsonnet';
 
 {
   local defaultMetadata(appName, namespace, extraLabels={}) = {
@@ -39,8 +39,10 @@ local tankaUtils = import "common/lib/tanka-utils.libsonnet";
                      command=null,
                      env=null,
                      ports=null,
-                     volumeMounts=null):
+                     volumeMounts=null,
+                     imagePullPolicy='IfNotPresent'):
     $.tk.container.new(containerName, image)
+    + $.tk.container.withImagePullPolicy(imagePullPolicy)
     + (if args != null then $.tk.container.withArgs(args) else {})
     + (if command != null then $.tk.container.withCommand(command) else {})
     + $.tk.container.resources.withRequests(resources.requests)
@@ -49,7 +51,7 @@ local tankaUtils = import "common/lib/tanka-utils.libsonnet";
     + (if ports != null then $.tk.container.withPorts(ports) else {})
     + (if volumeMounts != null then $.tk.container.withVolumeMounts(volumeMounts) else {}),
 
-  generateContainerPort(name=null, containerPort, protocol="TCP"):
+  generateContainerPort(name=null, containerPort, protocol='TCP'):
     $.tk.containerPort.new(containerPort)
     + (if name != null then $.tk.containerPort.withName(name) else {})
     + $.tk.containerPort.withProtocol(protocol),
@@ -96,11 +98,11 @@ local tankaUtils = import "common/lib/tanka-utils.libsonnet";
 
   generatePodSpec(
     volumes=null,
-    restartPolicy="Always",
+    restartPolicy='Always',
     initContainers=null,
     nodeSelector=null,
     nodeName=null,
-    dnsPolicy="ClusterFirst",
+    dnsPolicy='ClusterFirst',
     serviceAccountName=null,
   ):
     $.tk.podSpec.withRestartPolicy(restartPolicy)
@@ -111,7 +113,7 @@ local tankaUtils = import "common/lib/tanka-utils.libsonnet";
     + (if nodeName != null then $.tk.podSpec.withNodeName(nodeName) else {})
     + (if serviceAccountName != null then $.tk.podSpec.withServiceAccountName(serviceAccountName) else {}),
 
-  generateService(namespace, appName, ports, type="ClusterIP", clusterIP=null, extraLabels={}):
+  generateService(namespace, appName, ports, type='ClusterIP', clusterIP=null, extraLabels={}):
     $.tk.service.new(
       appName,
       selector={
@@ -123,13 +125,13 @@ local tankaUtils = import "common/lib/tanka-utils.libsonnet";
     + (if clusterIP != null then $.tk.service.spec.withClusterIP(clusterIP) else {})
     + defaultMetadata(appName, namespace, extraLabels),
 
-  generateServicePort(name=null, port, targetPort, protocol="TCP", nodePort=null):
+  generateServicePort(name=null, port, targetPort, protocol='TCP', nodePort=null):
     $.tk.servicePort.new(port, targetPort)
     + (if name != null then $.tk.servicePort.withName(name) else {})
     + $.tk.servicePort.withProtocol(protocol)
     + (if nodePort != null then $.tk.servicePort.withNodePort(nodePort) else {}),
 
-  generateIngressPath(urlPath, serviceName, servicePort, pathType="ImplementationSpecific"):
+  generateIngressPath(urlPath, serviceName, servicePort, pathType='ImplementationSpecific'):
     $.tk.httpIngressPath.withPath(urlPath)
     + $.tk.httpIngressPath.withPathType(pathType)
     + $.tk.httpIngressPath.backend.service.withName(serviceName)
@@ -143,30 +145,30 @@ local tankaUtils = import "common/lib/tanka-utils.libsonnet";
                   hostnameList=[],
                   certificateName=null,
                   extraRules=[],
-                  extraPaths=["/"],
+                  extraPaths=['/'],
                   extraGeneratedPaths=[],
                   withCertManager=true,
                   extraLabels={},
-                  ingressClass="nginx"):
+                  ingressClass='nginx'):
     $.tk.ingress.new(appName)
     + defaultMetadata(appName, namespace, extraLabels)
     + $.tk.ingress.spec.withIngressClassName(ingressClass)
     + $.tk.ingress.metadata.withAnnotations(
       annotations
       + (if withCertManager then {
-           "nginx.ingress.kubernetes.io/ssl-redirect": "true",
-           "nginx.ingress.kubernetes.io/force-ssl-redirect": "true",
-           "nginx.ingress.kubernetes.io/use-port-in-redirects": "true",
+           'nginx.ingress.kubernetes.io/ssl-redirect': 'true',
+           'nginx.ingress.kubernetes.io/force-ssl-redirect': 'true',
+           'nginx.ingress.kubernetes.io/use-port-in-redirects': 'true',
          } + (if certificateName == null then {
-                "cert-manager.io/cluster-issuer": "letsencrypt-dns-cloudflare",
-                "cert-manager.io/common-name": hostnameList[0],
+                'cert-manager.io/cluster-issuer': 'letsencrypt-dns-cloudflare',
+                'cert-manager.io/common-name': hostnameList[0],
               } else {})
          else {})
     )
     + (if withCertManager then $.tk.ingress.spec.withTls([{
          hosts: hostnameList,
          secretName: if certificateName != null
-         then certificateName else appName + "-certificate-tls",
+         then certificateName else appName + '-certificate-tls',
        }]) else {})
     + $.tk.ingress.spec.withRules(extraRules + [
       $.tk.ingressRule.withHost(hostname)
@@ -178,10 +180,13 @@ local tankaUtils = import "common/lib/tanka-utils.libsonnet";
     ]),
 
   getServiceHostname(serviceName):
-    serviceName + ".corp.aetherrootr.com",
+    serviceName + '.corp.aetherrootr.com',
 
   getWildcardCertificateName(namespace):
-    namespace + "-wildcard-certificate-tls",
+    namespace + '-wildcard-certificate-tls',
+
+  getPVCName(storageClass, namespace):
+    storageClass + '-' + namespace + '-pvc',
 
   generateNfsVolume(name, nfsServer, path, readOnly=false):
     $.tk.volume.withName(name)
@@ -192,12 +197,6 @@ local tankaUtils = import "common/lib/tanka-utils.libsonnet";
   generateVolumeMount(name, mountPath, readOnly=false, subPath=null):
     $.tk.volumeMount.new(name, mountPath, readOnly)
     + (if subPath != null then $.tk.volumeMount.withSubPath(subPath) else {}),
-
-  getNfsUrl(nfsName):
-    nfsName + "_nfs.corp.aetherrootr.com",
-
-  getServiceDataNfsPath(nfsName, appName):
-    "/media/" + nfsName + "/" + std.strReplace(appName, "-", "_"),
 
   generateConfigMapVolume(name, configMapName, items=[]):
     $.tk.volume.withName(name)

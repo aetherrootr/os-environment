@@ -40,7 +40,8 @@ local tankaUtils = import 'common/lib/tanka-utils.libsonnet';
                      env=null,
                      ports=null,
                      volumeMounts=null,
-                     imagePullPolicy='IfNotPresent'):
+                     imagePullPolicy='IfNotPresent',
+                     privileged=false):
     $.tk.container.new(containerName, image)
     + $.tk.container.withImagePullPolicy(imagePullPolicy)
     + (if args != null then $.tk.container.withArgs(args) else {})
@@ -49,7 +50,8 @@ local tankaUtils = import 'common/lib/tanka-utils.libsonnet';
     + $.tk.container.resources.withLimits(resources.limits)
     + (if env != null then $.tk.container.withEnv(env) else {})
     + (if ports != null then $.tk.container.withPorts(ports) else {})
-    + (if volumeMounts != null then $.tk.container.withVolumeMounts(volumeMounts) else {}),
+    + (if volumeMounts != null then $.tk.container.withVolumeMounts(volumeMounts) else {})
+    + (if privileged != false then $.tk.container.securityContext.withPrivileged(privileged) else {}),
 
   generateContainerPort(name=null, containerPort, protocol='TCP'):
     $.tk.containerPort.new(containerPort)
@@ -104,6 +106,7 @@ local tankaUtils = import 'common/lib/tanka-utils.libsonnet';
     nodeName=null,
     dnsPolicy='ClusterFirst',
     serviceAccountName=null,
+    hostNetwork=false,
   ):
     $.tk.podSpec.withRestartPolicy(restartPolicy)
     + $.tk.podSpec.withDnsPolicy(dnsPolicy)
@@ -111,7 +114,8 @@ local tankaUtils = import 'common/lib/tanka-utils.libsonnet';
     + (if initContainers != null then $.tk.podSpec.withInitContainers(initContainers) else {})
     + (if nodeSelector != null then $.tk.podSpec.withNodeSelector(nodeSelector) else {})
     + (if nodeName != null then $.tk.podSpec.withNodeName(nodeName) else {})
-    + (if serviceAccountName != null then $.tk.podSpec.withServiceAccountName(serviceAccountName) else {}),
+    + (if serviceAccountName != null then $.tk.podSpec.withServiceAccountName(serviceAccountName) else {})
+    + (if hostNetwork == true then $.tk.podSpec.withHostNetwork(hostNetwork) else {}),
 
   generateService(namespace,
                   appName,

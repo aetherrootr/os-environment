@@ -14,6 +14,10 @@
     - import_role:
         name: k8s
         tasks_from: common
+    
+    - import_role:
+        name: k8s
+        tasks_from: setup_bluetooth
 
     - import_role:
         name: k8s

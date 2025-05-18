@@ -1,0 +1,13 @@
+---
+- name: Install bluez and bluetooth
+  apt:
+    name: '{{ packages }}'
+    state: present
+    install_recommends: false
+    force: true
+    update_cache: true
+  vars:
+    packages:
+      - bluez
+      - bluetooth
+  when: inventory_hostname == 'k8s-node-1.corp.aetherrootr.com'

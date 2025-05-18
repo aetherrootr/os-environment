@@ -107,6 +107,7 @@ local tankaUtils = import 'common/lib/tanka-utils.libsonnet';
     dnsPolicy='ClusterFirst',
     serviceAccountName=null,
     hostNetwork=false,
+    tolerations=null,
   ):
     $.tk.podSpec.withRestartPolicy(restartPolicy)
     + $.tk.podSpec.withDnsPolicy(dnsPolicy)
@@ -115,7 +116,8 @@ local tankaUtils = import 'common/lib/tanka-utils.libsonnet';
     + (if nodeSelector != null then $.tk.podSpec.withNodeSelector(nodeSelector) else {})
     + (if nodeName != null then $.tk.podSpec.withNodeName(nodeName) else {})
     + (if serviceAccountName != null then $.tk.podSpec.withServiceAccountName(serviceAccountName) else {})
-    + (if hostNetwork == true then $.tk.podSpec.withHostNetwork(hostNetwork) else {}),
+    + (if hostNetwork == true then $.tk.podSpec.withHostNetwork(hostNetwork) else {})
+    + (if tolerations != null then $.tk.podSpec.withTolerations(tolerations) else {}),
 
   generateService(namespace,
                   appName,

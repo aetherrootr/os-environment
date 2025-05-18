@@ -2,6 +2,7 @@
   {
     labels: {
       bluetooth: 'exist',
+      gpu: 'intel',
     },
     nodeNames: [
       'k8s-node-1',
@@ -22,4 +23,19 @@
       },
     ],
   },
+  {
+    labels: {
+      'reserved-app': 'qbittorrent',
+    },
+    nodeNames: [
+      'vm-server-1',
+    ],
+    taints: [
+      {
+        key: 'reserved-app',
+        value: 'qbittorrent',
+        effect: 'NoSchedule',
+      },
+    ],
+  }
 ]

@@ -1,0 +1,10 @@
+directory: charts
+repositories:
+- name: stable
+  url: https://charts.helm.sh/stable
+- name: jitsi
+  url: https://jitsi-contrib.github.io/jitsi-helm/
+requires:
+- chart: jitsi/jitsi-meet
+  version: 1.4.1
+version: 1

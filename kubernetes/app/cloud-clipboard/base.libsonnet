@@ -7,7 +7,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   port:: 9501,
   certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
-  local containerImage = 'aethertaberu/cloud-clipboard:latest',
+  local containerImage = 'ghcr.io/jonnyan404/cloud-clipboard-go:latest',
   local hosts = [k8sUtils.getServiceHostname(serviceName='clipboard')],
 
   local containers = k8sUtils.generateContainers(
@@ -33,6 +33,11 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
         subPath='config.json',
         readOnly=true,
       ),
+      k8sUtils.generateVolumeMount(
+        name=$.appName + '-pvc',
+        mountPath='/storage',
+        subPath=std.strReplace($.appName, '-', '_'),
+      ),
     ],
   ),
 
@@ -46,13 +51,13 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
         'config.json': std.manifestJson(
           {
             server: {
-              host: null,
+              host: [],
               port: $.port,
-              key: null,
-              cert: null,
-              forceWss: true,
-              history: 15,
+              prefix: '',
+              history: 20,
               auth: false,
+              historyFile: '/storage/history.json',
+              storageDir: '/storage',
             },
             text: {
               limit: 10240,
@@ -89,6 +94,15 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
               ),
             ],
           ),
+          {
+            name: $.appName + '-pvc',
+            persistentVolumeClaim: {
+              claimName: k8sUtils.getPVCName(
+                namespace=$.namespace,
+                storageClass='service-data',
+              ),
+            },
+          },
         ],
       ),
       replicas=$.replicas,

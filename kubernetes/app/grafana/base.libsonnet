@@ -1,4 +1,5 @@
 local k8sUtils = import 'utils/k8s-utils.libsonnet';
+local prometheusDatasource = importstr 'datasource/prometheus.yaml';
 
 {
   namespace:: error ('namespace is required'),
@@ -22,7 +23,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
         cpu: '250m',
         memory: '750Mi',
       },
-      limits:{}
+      limits: {},
     },
     volumeMounts=[
       k8sUtils.generateVolumeMount(
@@ -30,16 +31,28 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
         mountPath='/var/lib/grafana',
         subPath=std.strReplace($.appName, '-', '_'),
       ),
+      k8sUtils.generateVolumeMount(
+        name=$.appName + '-datasource',
+        mountPath='/etc/grafana/provisioning/datasources',
+        readOnly=true,
+      ),
     ],
     env=[
-        k8sUtils.generateEnv(name='GF_SECURITY_ADMIN_USER', value='admin'),
-        k8sUtils.generateSecretEnv(name='GF_SECURITY_ADMIN_PASSWORD', secretName='grafana-secret', key='password'),
+      k8sUtils.generateEnv(name='GF_SECURITY_ADMIN_USER', value='admin'),
+      k8sUtils.generateSecretEnv(name='GF_SECURITY_ADMIN_PASSWORD', secretName='grafana-secret', key='password'),
     ]
   ),
 
   apiVersion: 'apps/v1',
   kind: 'list',
   items: std.prune([
+    k8sUtils.generateConfigMap(
+      namespace=$.namespace,
+      appName=$.appName + '-datasource',
+      data={
+        'prometheus.yaml': prometheusDatasource,
+      }
+    ),
     k8sUtils.generateService(
       namespace=$.namespace,
       appName=$.appName,
@@ -62,6 +75,10 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
               ),
             },
           },
+          k8sUtils.generateConfigMapVolume(
+            name=$.appName + '-datasource',
+            configMapName=$.appName + '-datasource'
+          ),
         ],
       ),
       replicas=$.replicas,

@@ -34,7 +34,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
     ],
     volumeMounts=[
       k8sUtils.generateVolumeMount(
-        name=$.appName + '-pvc',
+        name=$.appName + '-data',
         mountPath=dataDir,
         subPath=std.strReplace($.appName, '-', '_'),
       ),
@@ -57,16 +57,15 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       containers=containers,
       podSpec=k8sUtils.generatePodSpec(
         volumes=[
-          {
-            name: $.appName + '-pvc',
-            persistentVolumeClaim: {
-              claimName: k8sUtils.getPVCName(
-                namespace=$.namespace,
-                storageClass='service-data',
-              ),
-            },
-          },
+          k8sUtils.generateHostPathVolume(
+            name=$.appName + '-data',
+            path='/media/service_data/influxdb3',
+            type='DirectoryOrCreate',
+          ),
         ],
+        nodeSelector={
+          'service-data-mount': 'true',
+        },
       ),
       replicas=$.replicas,
     ),

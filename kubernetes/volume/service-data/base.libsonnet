@@ -10,7 +10,7 @@ local volumeUtils = import 'utils/volume-utils.libsonnet';
     volumeUtils.generateStaticNfsPV(
       name=$.volumeName,
       nfsServer=volumeUtils.getNfsServer('service-data'),
-      path='/media/service_data',
+      path='/mnt/service-data',
       accessModes=['ReadOnlyMany', 'ReadWriteMany'],
       storageClass='service-data',
     ),

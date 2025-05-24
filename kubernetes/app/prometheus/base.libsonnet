@@ -33,11 +33,11 @@ local prometheusYml = importstr 'config/prometheus.yml';
       '--config.file=/etc/prometheus/prometheus.yml',
       '--storage.tsdb.path=/prometheus',
       '--web.console.libraries=/usr/share/prometheus/console_libraries',
-      '--web.console.templates=/usr/share/prometheus/consoles'
+      '--web.console.templates=/usr/share/prometheus/consoles',
     ],
     volumeMounts=[
       k8sUtils.generateVolumeMount(
-        name=$.appName + '-data-pvc',
+        name=$.appName + '-data',
         mountPath='/prometheus',
         subPath=std.strReplace($.appName, '-', '_'),
       ),
@@ -71,20 +71,19 @@ local prometheusYml = importstr 'config/prometheus.yml';
       containers=containers,
       podSpec=k8sUtils.generatePodSpec(
         volumes=[
-          {
-            name: $.appName + '-data-pvc',
-            persistentVolumeClaim: {
-              claimName: k8sUtils.getPVCName(
-                namespace=$.namespace,
-                storageClass='service-data',
-              ),
-            },
-          },
+          k8sUtils.generateHostPathVolume(
+            name=$.appName + '-data',
+            path='/media/service_data/prometheus',
+            type='DirectoryOrCreate',
+          ),
           k8sUtils.generateConfigMapVolume(
             name=$.appName + '-config',
             configMapName=$.appName,
           ),
         ],
+        nodeSelector={
+          'service-data-mount': 'true',
+        }
       ),
       replicas=$.replicas,
     ),

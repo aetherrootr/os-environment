@@ -3,6 +3,7 @@
     labels: {
       bluetooth: 'exist',
       gpu: 'intel',
+      'service-data-mount': 'true',
     },
     nodeNames: [
       'k8s-node-1',

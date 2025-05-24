@@ -48,7 +48,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       k8sUtils.generateVolumeMount(
         name=$.appName + '-data-pvc',
         mountPath='/data/downloads',
-        subPath='download',
+        subPath='downloads',
       ),
     ],
   ),

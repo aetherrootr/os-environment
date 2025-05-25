@@ -40,6 +40,8 @@ local prometheusDatasource = importstr 'datasource/prometheus.yaml';
     env=[
       k8sUtils.generateEnv(name='GF_SECURITY_ADMIN_USER', value='admin'),
       k8sUtils.generateSecretEnv(name='GF_SECURITY_ADMIN_PASSWORD', secretName='grafana-secret', key='password'),
+      k8sUtils.generateEnv(name='GF_AUTH_ANONYMOUS_ENABLED', value='true'),
+      k8sUtils.generateEnv(name='GF_AUTH_ANONYMOUS_ORG_ROLE', value='Viewer'),
     ]
   ),
 

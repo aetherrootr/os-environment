@@ -12,7 +12,7 @@ local serviceAccountUtils = import 'utils/service-account-utils.libsonnet';
   kind: 'list',
   items: std.prune([
     serviceAccount,
-    roleBindingUtils.generateRoleBinding(
+    roleBindingUtils.generateClusterRoleBinding(
       namespace=null,
       roleBindingName=$.appName,
       serviceAccount=serviceAccount,

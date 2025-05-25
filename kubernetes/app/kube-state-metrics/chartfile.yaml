@@ -1,0 +1,10 @@
+directory: charts
+repositories:
+- name: stable
+  url: https://charts.helm.sh/stable
+- name: prometheusCommunity
+  url: https://prometheus-community.github.io/helm-charts
+requires:
+- chart: prometheusCommunity/kube-state-metrics
+  version: 3.3.0
+version: 1

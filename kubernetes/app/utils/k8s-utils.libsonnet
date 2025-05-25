@@ -218,10 +218,15 @@ local tankaUtils = import 'common/lib/tanka-utils.libsonnet';
     + $.tk.volume.configMap.withName(configMapName)
     + (if items != [] then $.tk.volume.configMap.withItems(items) else {}),
 
-  generateConfigMapVolumeItem(key, path): {
+  generateVolumeItem(key, path): {
     key: key,
     path: path,
   },
+
+  generateSecretVolume(name, secretName, items=[]):
+    $.tk.volume.withName(name)
+    + $.tk.volume.secret.withSecretName(secretName)
+    + (if items != [] then $.tk.volume.secret.withItems(items) else {}),
 
   importFromHelmChart(projectPath,
                       name,

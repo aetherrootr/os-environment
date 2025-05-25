@@ -34,6 +34,7 @@ local prometheusYml = importstr 'config/prometheus.yml';
       '--storage.tsdb.path=/prometheus',
       '--web.console.libraries=/usr/share/prometheus/console_libraries',
       '--web.console.templates=/usr/share/prometheus/consoles',
+      '--storage.tsdb.retention.time=365d',
     ],
     volumeMounts=[
       k8sUtils.generateVolumeMount(
@@ -45,6 +46,12 @@ local prometheusYml = importstr 'config/prometheus.yml';
         name=$.appName + '-config',
         mountPath='/etc/prometheus',
         readOnly=true,
+      ),
+      k8sUtils.generateVolumeMount(
+        name='homeassistant-token',
+        mountPath='/etc/secrets/homeassistant_token',
+        readOnly=true,
+        subPath='homeassistant_token',
       ),
     ],
   ),
@@ -79,6 +86,13 @@ local prometheusYml = importstr 'config/prometheus.yml';
           k8sUtils.generateConfigMapVolume(
             name=$.appName + '-config',
             configMapName=$.appName,
+          ),
+          k8sUtils.generateSecretVolume(
+            name='homeassistant-token',
+            secretName='prometheus-homeassistant-secret',
+            items=[
+              k8sUtils.generateVolumeItem(key='token', path='homeassistant_token'),
+            ],
           ),
         ],
         nodeSelector={

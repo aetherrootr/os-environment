@@ -68,3 +68,6 @@ scrape_configs:
       regex: kube-state-metrics
       replacement: $1
       action: keep
+
+rule_files:
+  - "/etc/prometheus/rules/*.yml"

@@ -1,5 +1,6 @@
 local k8sUtils = import 'utils/k8s-utils.libsonnet';
 local prometheusYml = importstr 'config/prometheus.yml';
+local clashRulesYml = importstr 'rules/clash.yml';
 
 {
   namespace:: error ('namespace is required'),
@@ -48,6 +49,11 @@ local prometheusYml = importstr 'config/prometheus.yml';
         readOnly=true,
       ),
       k8sUtils.generateVolumeMount(
+        name=$.appName + '-rule',
+        mountPath='/etc/prometheus/rules',
+        readOnly=true,
+      ),
+      k8sUtils.generateVolumeMount(
         name='homeassistant-token',
         mountPath='/etc/secrets/homeassistant_token',
         readOnly=true,
@@ -63,6 +69,7 @@ local prometheusYml = importstr 'config/prometheus.yml';
       appName=$.appName,
       data={
         'prometheus.yml': prometheusYml,
+        'clash.yml': clashRulesYml,
       },
     ),
     k8sUtils.generateService(
@@ -87,6 +94,16 @@ local prometheusYml = importstr 'config/prometheus.yml';
           k8sUtils.generateConfigMapVolume(
             name=$.appName + '-config',
             configMapName=$.appName,
+            items=[
+              k8sUtils.generateVolumeItem(key='prometheus.yml', path='prometheus.yml'),
+            ],
+          ),
+          k8sUtils.generateConfigMapVolume(
+            name=$.appName + '-rule',
+            configMapName=$.appName,
+            items=[
+              k8sUtils.generateVolumeItem(key='clash.yml', path='clash.yml'),
+            ],
           ),
           k8sUtils.generateSecretVolume(
             name='homeassistant-token',

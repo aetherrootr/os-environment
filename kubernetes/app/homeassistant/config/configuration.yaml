@@ -1,0 +1,108 @@
+# Loads default set of integrations. Do not remove.
+default_config:
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 0.0.0.0/0
+
+template:
+  - trigger:
+      - platform: event
+        event_type: state_changed
+        event_data:
+          entity_id: sensor.electricity_charge_balance_8915
+    sensor:
+      - name: electricity_charge_balance_8915
+        unique_id: electricity_charge_balance_8915
+        state: "{{ states('sensor.electricity_charge_balance_8915') }}"
+        state_class: total
+        unit_of_measurement: "CNY"
+        device_class: monetary
+
+  - trigger:
+      - platform: event
+        event_type: state_changed
+        event_data:
+          entity_id: sensor.last_electricity_usage_8915
+    sensor:
+      - name: last_electricity_usage_8915
+        unique_id: last_electricity_usage_8915
+        state: "{{ states('sensor.last_electricity_usage_8915') }}"
+        state_class: measurement
+        unit_of_measurement: "kWh"
+        device_class: energy
+
+  - trigger:
+      - platform: event
+        event_type: state_changed
+        event_data:
+          entity_id: sensor.month_electricity_usage_8915
+    sensor:
+      - name: month_electricity_usage_8915
+        unique_id: month_electricity_usage_8915
+        state: "{{ states('sensor.month_electricity_usage_8915') }}"
+        state_class: measurement
+        unit_of_measurement: "kWh"
+        device_class: energy
+
+  - trigger:
+      - platform: event
+        event_type: state_changed
+        event_data:
+          entity_id: sensor.month_electricity_charge_8915
+    sensor:
+      - name: month_electricity_charge_8915
+        unique_id: month_electricity_charge_8915
+        state: "{{ states('sensor.month_electricity_charge_8915') }}"
+        state_class: measurement
+        unit_of_measurement: "CNY"
+        device_class: monetary
+
+  - trigger:
+      - platform: event
+        event_type: state_changed
+        event_data:
+          entity_id: sensor.yearly_electricity_usage_8915
+    sensor:
+      - name: yearly_electricity_usage_8915
+        unique_id: yearly_electricity_usage_8915
+        state: "{{ states('sensor.yearly_electricity_usage_8915') }}"
+        state_class: total_increasing
+        unit_of_measurement: "kWh"
+        device_class: energy
+
+  - trigger:
+      - platform: event
+        event_type: state_changed
+        event_data:
+          entity_id: sensor.yearly_electricity_charge_8915
+    sensor:
+      - name: yearly_electricity_charge_8915
+        unique_id: yearly_electricity_charge_8915
+        state: "{{ states('sensor.yearly_electricity_charge_8915') }}"
+        state_class: total_increasing
+        unit_of_measurement: "CNY"
+        device_class: monetary
+
+prometheus:
+  namespace: homeassistant
+  filter:
+    include_entities:
+      - sensor.electricity_charge_balance_8915
+      - sensor.last_electricity_usage_8915
+      - sensor.month_electricity_usage_8915
+      - sensor.month_electricity_charge_8915
+      - sensor.yearly_electricity_usage_8915
+      - sensor.yearly_electricity_charge_8915
+      - sensor.zhimi_cn_682960752_rma3_pm2_5_density_p_3_4
+      - sensor.zhimi_cn_682960752_rma3_temperature_p_3_7
+      - sensor.zhimi_cn_682960752_rma3_relative_humidity_p_3_1

@@ -88,7 +88,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
             name='config',
             configMapName=$.appName,
             items=[
-              k8sUtils.generateConfigMapVolumeItem(
+              k8sUtils.generateVolumeItem(
                 key='config.json',
                 path='config.json',
               ),

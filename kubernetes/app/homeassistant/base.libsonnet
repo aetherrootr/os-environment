@@ -1,4 +1,5 @@
 local k8sUtils = import 'utils/k8s-utils.libsonnet';
+local homeassistantConfig = importstr 'config/configuration.yaml';
 
 {
   namespace:: error ('namespace is required'),
@@ -41,12 +42,24 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
         mountPath='/run/dbus',
         readOnly=true,
       ),
+      k8sUtils.generateVolumeMount(
+        name=$.appName + '-config',
+        mountPath='/config/configuration.yaml',
+        readOnly=true,
+        subPath='configuration.yaml',)
     ],
   ),
 
   apiVersion: 'apps/v1',
   kind: 'list',
   items: std.prune([
+    k8sUtils.generateConfigMap(
+      namespace=$.namespace,
+      appName=$.appName,
+      data={
+        'configuration.yaml': homeassistantConfig,
+      },
+    ),
     k8sUtils.generateService(
       namespace=$.namespace,
       appName=$.appName,
@@ -78,6 +91,16 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
             name='dbus',
             path='/run/dbus',
             type='Directory',
+          ),
+          k8sUtils.generateConfigMapVolume(
+            name=$.appName + '-config',
+            configMapName=$.appName,
+            items=[
+              k8sUtils.generateVolumeItem(
+                key='configuration.yaml',
+                path='configuration.yaml',
+              ),
+            ],
           ),
         ],
         nodeSelector={

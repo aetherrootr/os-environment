@@ -77,6 +77,7 @@ local prometheusYml = importstr 'config/prometheus.yml';
       appName=$.appName,
       containers=containers,
       podSpec=k8sUtils.generatePodSpec(
+        serviceAccountName=$.appName,
         volumes=[
           k8sUtils.generateHostPathVolume(
             name=$.appName + '-data',

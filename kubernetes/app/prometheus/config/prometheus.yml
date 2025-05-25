@@ -13,3 +13,9 @@ scrape_configs:
     scheme: https
     static_configs:
       - targets: ["ha.corp.aetherrootr.com:443"]
+
+  - job_name: "clash"
+    metrics_path: /metrics
+    scrape_interval: 1s
+    static_configs:
+      - targets: ["clash-exporter.infrastructure.svc.cluster.local:2112"]

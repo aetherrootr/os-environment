@@ -1,0 +1,14 @@
+groups:
+- name: clash_rules
+  interval: 5m
+  rules:
+  - record: clash_network_traffic_increase_5m
+    expr: sum by (source, policy, type)(increase(clash_network_traffic_bytes_total[5m]))
+  - record: clash_network_traffic_increase_1h
+    expr: sum by (source, policy, type)(increase(clash_network_traffic_bytes_total[1h]))
+  - record: clash_network_traffic_increase_3h
+    expr: sum by (source, policy, type)(increase(clash_network_traffic_bytes_total[3h]))
+  - record: clash_network_traffic_increase_6h
+    expr: sum by (source, policy, type)(increase(clash_network_traffic_bytes_total[6h]))
+  - record: clash_network_traffic_increase_1d
+    expr: sum by (source, policy, type)(increase(clash_network_traffic_bytes_total[1d]))

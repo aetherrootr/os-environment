@@ -7,3 +7,4 @@ datasources:
     url: http://prometheus.infrastructure.svc.cluster.local:9090
     jsonData:
       timeInterval: 15s
+      timeout: 600

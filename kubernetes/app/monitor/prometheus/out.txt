@@ -1,0 +1,189 @@
+apiVersion: v1
+data:
+  clash.yml: |
+    groups:
+    - name: clash_rules
+      interval: 5m
+      rules:
+      - record: clash_network_traffic_increase_5m
+        expr: sum by (source, policy, type)(increase(clash_network_traffic_bytes_total[5m]))
+      - record: clash_network_traffic_increase_1h
+        expr: sum by (source, policy, type)(increase(clash_network_traffic_bytes_total[1h]))
+      - record: clash_network_traffic_increase_3h
+        expr: sum by (source, policy, type)(increase(clash_network_traffic_bytes_total[3h]))
+      - record: clash_network_traffic_increase_6h
+        expr: sum by (source, policy, type)(increase(clash_network_traffic_bytes_total[6h]))
+      - record: clash_network_traffic_increase_1d
+        expr: sum by (source, policy, type)(increase(clash_network_traffic_bytes_total[1d]))
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+    scrape_configs:
+      - job_name: "prometheus"
+        static_configs:
+          - targets: ["localhost:9090"]
+
+      - job_name: "clash"
+        metrics_path: /metrics
+        scrape_interval: 1s
+        static_configs:
+          - targets: ["clash-exporter.infrastructure.svc.cluster.local:2112"]
+
+    rule_files:
+      - "/etc/prometheus/rules/*.yml"
+kind: ConfigMap
+metadata:
+  labels:
+    app: prometheus-clash
+  name: prometheus-clash
+  namespace: infrastructure
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: prometheus-clash
+  name: prometheus-clash
+  namespace: infrastructure
+spec:
+  ports:
+  - name: http
+    port: 9090
+    protocol: TCP
+    targetPort: 9090
+  selector:
+    app: prometheus-clash
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: prometheus-clash
+  name: prometheus-clash
+  namespace: infrastructure
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus-clash
+  template:
+    metadata:
+      labels:
+        app: prometheus-clash
+    spec:
+      containers:
+      - args:
+        - --config.file=/etc/prometheus/prometheus.yml
+        - --storage.tsdb.path=/prometheus
+        - --web.console.libraries=/usr/share/prometheus/console_libraries
+        - --web.console.templates=/usr/share/prometheus/consoles
+        - --storage.tsdb.retention.time=45d
+        image: prom/prometheus:latest
+        imagePullPolicy: IfNotPresent
+        name: prometheus-clash
+        ports:
+        - containerPort: 9090
+          name: http
+          protocol: TCP
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+          requests:
+            cpu: 100m
+            memory: 256Mi
+        volumeMounts:
+        - mountPath: /prometheus
+          name: prometheus-clash-data
+          subPath: prometheus_clash
+        - mountPath: /etc/prometheus
+          name: prometheus-clash-config
+          readOnly: true
+        - mountPath: /etc/prometheus/rules
+          name: prometheus-clash-rule
+          readOnly: true
+      - args:
+        - sidecar
+        - --tsdb.path=/prometheus
+        - --prometheus.url=http://localhost:9090
+        - --grpc-address=0.0.0.0:10901
+        - --http-address=0.0.0.0:10902
+        image: thanosio/thanos:v0.38.0
+        imagePullPolicy: IfNotPresent
+        name: thanos-sidecar
+        ports:
+        - containerPort: 10901
+          name: grpc
+          protocol: TCP
+        - containerPort: 10902
+          name: http
+          protocol: TCP
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+          requests:
+            cpu: 50m
+            memory: 128Mi
+        volumeMounts:
+        - mountPath: /prometheus
+          name: prometheus-clash-data
+          subPath: prometheus_clash
+      dnsPolicy: ClusterFirst
+      nodeSelector:
+        service-data-mount: "true"
+      restartPolicy: Always
+      serviceAccountName: prometheus
+      volumes:
+      - hostPath:
+          path: /media/service_data/prometheus
+          type: DirectoryOrCreate
+        name: prometheus-clash-data
+      - configMap:
+          items:
+          - key: prometheus.yml
+            path: prometheus.yml
+          name: prometheus-clash
+        name: prometheus-clash-config
+      - name: homeassistant-token
+        secret:
+          items:
+          - key: token
+            path: homeassistant_token
+          secretName: prometheus-homeassistant-secret
+      - configMap:
+          items:
+          - key: clash.yml
+            path: clash.yml
+          name: prometheus-clash
+        name: prometheus-clash-rule
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/use-port-in-redirects: "true"
+  labels:
+    app: prometheus-clash
+  name: prometheus-clash
+  namespace: infrastructure
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: prometheus-clash.corp.aetherrootr.com
+    http:
+      paths:
+      - backend:
+          service:
+            name: prometheus-clash
+            port:
+              number: 9090
+        path: /
+        pathType: ImplementationSpecific
+  tls:
+  - hosts:
+    - prometheus-clash.corp.aetherrootr.com
+    secretName: infrastructure-wildcard-certificate-tls

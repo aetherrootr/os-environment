@@ -1,25 +1,13 @@
 global:
   scrape_interval: 15s
+  external_labels:
+    cluster: "prometheus-common"
+    replica: "0"
 scrape_configs:
   - job_name: "prometheus"
     static_configs:
       - targets: ["localhost:9090"]
 
-  - job_name: "homeassistant"
-    scrape_interval: 60s
-    metrics_path: "/api/prometheus"
-    authorization:
-      credentials_file: "/etc/secrets/homeassistant_token"
-    scheme: https
-    static_configs:
-      - targets: ["ha.corp.aetherrootr.com:443"]
-
-  - job_name: "clash"
-    metrics_path: /metrics
-    scrape_interval: 1s
-    static_configs:
-      - targets: ["clash-exporter.infrastructure.svc.cluster.local:2112"]
- 
   - job_name: 'k8s-kubelet'
     scheme: https
     tls_config:
@@ -68,6 +56,3 @@ scrape_configs:
       regex: kube-state-metrics
       replacement: $1
       action: keep
-
-rule_files:
-  - "/etc/prometheus/rules/*.yml"

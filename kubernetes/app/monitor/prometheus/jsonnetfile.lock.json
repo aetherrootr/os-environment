@@ -52,7 +52,7 @@
     {
       "source": {
         "local": {
-          "directory": "../utils"
+          "directory": "../../utils"
         }
       },
       "version": ""

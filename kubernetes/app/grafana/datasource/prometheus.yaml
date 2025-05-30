@@ -4,7 +4,15 @@ datasources:
     type: prometheus
     access: proxy
     isDefault: true
-    url: http://prometheus.infrastructure.svc.cluster.local:9090
+    url: http://thanos-querier.infrastructure.svc.cluster.local:9090
+    jsonData:
+      timeInterval: 15s
+      timeout: 600
+
+  - name: Prometheus-clash
+    type: prometheus
+    access: proxy
+    url: http://prometheus-clash.infrastructure.svc.cluster.local:9090
     jsonData:
       timeInterval: 15s
       timeout: 600

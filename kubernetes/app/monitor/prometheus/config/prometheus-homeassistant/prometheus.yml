@@ -1,0 +1,18 @@
+global:
+  scrape_interval: 15s
+  external_labels:
+    cluster: "prometheus-eletricity"
+    replica: "0"
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: "homeassistant"
+    scrape_interval: 60s
+    metrics_path: "/api/prometheus"
+    authorization:
+      credentials_file: "/etc/secrets/homeassistant_token"
+    scheme: https
+    static_configs:
+      - targets: ["ha.corp.aetherrootr.com:443"]

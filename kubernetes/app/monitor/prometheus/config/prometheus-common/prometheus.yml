@@ -62,3 +62,7 @@ scrape_configs:
     scheme: http
     static_configs:
       - targets: ['tailscale-exit-node.corp.aetherrootr.com:8080']
+
+  - job_name: "qbittorrent"
+    static_configs:
+      - targets: ["qbittorrent-exporter.infrastructure.svc.cluster.local:8090"]

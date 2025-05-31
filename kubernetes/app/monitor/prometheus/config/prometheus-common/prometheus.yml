@@ -56,3 +56,9 @@ scrape_configs:
       regex: kube-state-metrics
       replacement: $1
       action: keep
+
+  - job_name: 'tailscale'
+    metrics_path: /metrics
+    scheme: http
+    static_configs:
+      - targets: ['tailscale-exit-node.corp.aetherrootr.com:8080']

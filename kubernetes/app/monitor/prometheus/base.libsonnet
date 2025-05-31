@@ -122,9 +122,13 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       appName=$.appName,
       ports=[
         k8sUtils.generateServicePort(name='http', port=$.port, targetPort=$.port),
-        k8sUtils.generateServicePort(name='grpc-sidecar', port=$.thanosSidecarGrpcPort, targetPort=$.thanosSidecarGrpcPort),
-        k8sUtils.generateServicePort(name='http-sidecar', port=$.thanosSidecarHttpPort, targetPort=$.thanosSidecarHttpPort),
-      ],
+      ] + (
+        if $.disableThanosSidecar then []
+        else [
+          k8sUtils.generateServicePort(name='grpc-sidecar', port=$.thanosSidecarGrpcPort, targetPort=$.thanosSidecarGrpcPort),
+          k8sUtils.generateServicePort(name='http-sidecar', port=$.thanosSidecarHttpPort, targetPort=$.thanosSidecarHttpPort),
+        ]
+      ),
     ),
     k8sUtils.generateStatefulSet(
       namespace=$.namespace,

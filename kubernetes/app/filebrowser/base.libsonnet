@@ -7,7 +7,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   port:: 8080,
   certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
-  local containerImage = 'hurlenko/filebrowser:latest',
+  local containerImage = 'gtstef/filebrowser:latest',
   local hosts = [k8sUtils.getServiceHostname(serviceName='files')],
 
 
@@ -29,17 +29,22 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
     },
     volumeMounts=[
       k8sUtils.generateVolumeMount(
-        name=$.appName + '-config-pvc',
-        mountPath='/config',
+        name=$.appName + '-database-pvc',
+        mountPath='/home/filebrowser/database',
         subPath=$.appName,
       ),
       k8sUtils.generateVolumeMount(
         name=$.appName + '-data-pvc',
         mountPath='/data',
       ),
+      k8sUtils.generateVolumeMount(
+        name='config',
+        mountPath='/home/filebrowser/config.yaml',
+        subPath='config.yaml',
+        readOnly=true,
+      ),
     ],
     env=[
-      k8sUtils.generateEnv('FB_BASEURL', '/filebrowser'),
       k8sUtils.generateEnv('TZ', 'Asia/Shanghai'),
     ]
   ),
@@ -47,6 +52,13 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   apiVersion: 'apps/v1',
   kind: 'list',
   items: std.prune([
+    k8sUtils.generateConfigMap(
+      namespace=$.namespace,
+      appName=$.appName,
+      data={
+        'config.yaml': importstr 'config/config.yaml',
+      },
+    ),
     k8sUtils.generateService(
       namespace=$.namespace,
       appName=$.appName,
@@ -60,6 +72,16 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       containers=containers,
       podSpec=k8sUtils.generatePodSpec(
         volumes=[
+          k8sUtils.generateConfigMapVolume(
+            name='config',
+            configMapName=$.appName,
+            items=[
+              k8sUtils.generateVolumeItem(
+                key='config.yaml',
+                path='config.yaml',
+              ),
+            ],
+          ),
           {
             name: $.appName + '-data-pvc',
             persistentVolumeClaim: {
@@ -70,7 +92,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
             },
           },
           {
-            name: $.appName + '-config-pvc',
+            name: $.appName + '-database-pvc',
             persistentVolumeClaim: {
               claimName: k8sUtils.getPVCName(
                 namespace=$.namespace,

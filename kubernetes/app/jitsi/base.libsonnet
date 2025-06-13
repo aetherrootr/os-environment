@@ -19,14 +19,8 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       values: {
         tz: 'Asia/Shanghai',
         jvb: {
-          service: {
-            type: 'NodePort',
-            nodePort: 30000,
-          },
-          publicIPs: [
-            '192.168.8.185',
-            '192.168.8.152',
-          ],
+          useHostPort: true,
+          useNodeIP: true
         },
         web: {
           ingress: {

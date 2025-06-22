@@ -11,5 +11,6 @@ env {
     prometheusYml: importstr '../../config/prometheus-homeassistant/prometheus.yml',
     retentionTime: '365d',
     withHomeAssistantToken: true,
+    enableAuthProxy: true,
   },
 }

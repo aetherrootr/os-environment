@@ -14,5 +14,6 @@ env {
     rulesConfig: {
       'clash.yml': importstr '../../rules/clash.yml',
     },
+    enableAuthProxy: true,
   },
 }

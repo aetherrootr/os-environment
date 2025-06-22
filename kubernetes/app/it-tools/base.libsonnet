@@ -54,6 +54,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       port=$.port,
       hostnameList=hosts,
       certificateName=$.certificateName,
+      withAuthProxy=true,
     ),
   ]),
 }

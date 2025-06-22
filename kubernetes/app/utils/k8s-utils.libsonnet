@@ -147,6 +147,12 @@ local tankaUtils = import 'common/lib/tanka-utils.libsonnet';
     + $.tk.httpIngressPath.backend.service.withName(serviceName)
     + $.tk.httpIngressPath.backend.service.port.withNumber(servicePort),
 
+  getAuthProxyOutpostAppName(appName):
+    'authentik-proxy-outpost-' + appName,
+
+  getAuthProxyOutpostServiceUrl(appName, namespace):
+    'http://' + $.getAuthProxyOutpostAppName(appName) + '.' + namespace + '.svc.cluster.local:9000',
+
   generateIngress(namespace,
                   appName,
                   serviceName,
@@ -159,13 +165,13 @@ local tankaUtils = import 'common/lib/tanka-utils.libsonnet';
                   extraGeneratedPaths=[],
                   withCertManager=true,
                   extraLabels={},
+                  withAuthProxy=false,
                   ingressClass='nginx'):
     $.tk.ingress.new(appName)
     + defaultMetadata(appName, namespace, extraLabels)
     + $.tk.ingress.spec.withIngressClassName(ingressClass)
     + $.tk.ingress.metadata.withAnnotations(
-      annotations
-      + (if withCertManager then {
+      (if withCertManager then {
            'nginx.ingress.kubernetes.io/ssl-redirect': 'true',
            'nginx.ingress.kubernetes.io/force-ssl-redirect': 'true',
            'nginx.ingress.kubernetes.io/use-port-in-redirects': 'true',
@@ -174,6 +180,13 @@ local tankaUtils = import 'common/lib/tanka-utils.libsonnet';
                 'cert-manager.io/common-name': hostnameList[0],
               } else {})
          else {})
+      + (if withAuthProxy then {
+           'nginx.ingress.kubernetes.io/auth-url': $.getAuthProxyOutpostServiceUrl(appName,namespace) +'/outpost.goauthentik.io/auth/nginx',
+           'nginx.ingress.kubernetes.io/auth-signin': 'https://' + hostnameList[0] + '/outpost.goauthentik.io/start?rd=$scheme://$http_host$escaped_request_uri',
+           'nginx.ingress.kubernetes.io/auth-response-headers': 'Set-Cookie,X-authentik-username,X-authentik-groups,X-authentik-email,X-authentik-name,X-authentik-uid',
+           'nginx.ingress.kubernetes.io/use-regex': 'true',
+      } else {})
+      + annotations
     )
     + (if withCertManager then $.tk.ingress.spec.withTls([{
          hosts: hostnameList,
@@ -182,10 +195,21 @@ local tankaUtils = import 'common/lib/tanka-utils.libsonnet';
        }]) else {})
     + $.tk.ingress.spec.withRules(extraRules + [
       $.tk.ingressRule.withHost(hostname)
-      + $.tk.ingressRule.http.withPaths([
-        $.generateIngressPath(urlPath=path, serviceName=serviceName, servicePort=port)
-        for path in extraPaths
-      ] + extraGeneratedPaths)
+      + $.tk.ingressRule.http.withPaths(
+        [
+          $.generateIngressPath(urlPath=path, serviceName=serviceName, servicePort=port)
+          for path in extraPaths
+        ] + extraGeneratedPaths
+        + (
+          if withAuthProxy then [
+            $.generateIngressPath(
+              urlPath='/outpost\\.goauthentik\\.io(/|$)(.*)',
+              serviceName=$.getAuthProxyOutpostAppName(appName),
+              servicePort=9000,
+            ),
+          ] else []
+        )
+      )
       for hostname in hostnameList
     ]),
 

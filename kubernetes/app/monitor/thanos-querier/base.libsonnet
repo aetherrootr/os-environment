@@ -26,7 +26,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       '--endpoint=prometheus-common.infrastructure.svc.cluster.local:10901',
       '--query.timeout=5m',
       '--query.max-concurrent-select=2',
-      ],
+    ],
     resources={
       requests: {
         cpu: '100m',
@@ -64,6 +64,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       port=$.port,
       hostnameList=hosts,
       certificateName=$.certificateName,
+      withAuthProxy=true,
     ),
   ]),
 }

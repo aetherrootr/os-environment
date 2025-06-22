@@ -1,7 +1,6 @@
 local authentik = import 'authentik.libsonnet';
 local postgresdb = import 'postgresdb.libsonnet';
 local redis = import 'redis.libsonnet';
-local authentikProxyOutpost = import 'outposts/proxy-outpost.libsonnet';
 
 {
   namespace:: error ('namespace is required'),
@@ -46,16 +45,11 @@ local authentikProxyOutpost = import 'outposts/proxy-outpost.libsonnet';
     databaseUser: $.databaseUser,
   },
 
-  local authentikProxyOutpostResources = authentikProxyOutpost {
-    namespace: $.namespace,
-  },
-
   apiVersion: 'apps/v1',
   kind: 'list',
   items: std.prune(
     redisResources.redis
     + postgresResources.postgresdb
     + authentikResources.authentik
-    + authentikProxyOutpostResources.authentikProxyOutpost
   ),
 }

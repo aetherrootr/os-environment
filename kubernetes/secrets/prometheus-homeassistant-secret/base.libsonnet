@@ -14,6 +14,10 @@ local secretUtils = import 'utils/secret-utils.libsonnet';
           bwSecretId='1fff4c8c-b881-4f34-85b6-b2e701104aca',
           secretKeyName='token',
         ),
+        secretUtils.generateBwSecret(
+          bwSecretId='6d48d78f-df3f-4e56-b8e0-b30400efac2e',
+          secretKeyName='authentik-proxy-outpost-token',
+        ),
       ],
     ),
   ],

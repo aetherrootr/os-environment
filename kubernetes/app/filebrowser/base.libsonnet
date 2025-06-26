@@ -10,6 +10,10 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   local containerImage = 'gtstef/filebrowser:latest',
   local hosts = [k8sUtils.getServiceHostname(serviceName='files')],
 
+  local appEnv = std.prune([
+    k8sUtils.generateEnv(name='FILEBROWSER_CONFIG', value='/home/filebrowser/config.yaml'),
+    k8sUtils.generateEnv('TZ', 'Asia/Shanghai'),
+  ]),
 
   local containers = k8sUtils.generateContainers(
     containerName=$.appName,
@@ -27,10 +31,11 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
         memory: '1Gi',
       },
     },
+    env=appEnv,
     volumeMounts=[
       k8sUtils.generateVolumeMount(
         name=$.appName + '-database-pvc',
-        mountPath='/home/filebrowser/database',
+        mountPath='/home/filebrowser/data',
         subPath=$.appName,
       ),
       k8sUtils.generateVolumeMount(
@@ -44,21 +49,11 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
         readOnly=true,
       ),
     ],
-    env=[
-      k8sUtils.generateEnv('TZ', 'Asia/Shanghai'),
-    ]
   ),
 
   apiVersion: 'apps/v1',
   kind: 'list',
   items: std.prune([
-    k8sUtils.generateConfigMap(
-      namespace=$.namespace,
-      appName=$.appName,
-      data={
-        'config.yaml': importstr 'config/config.yaml',
-      },
-    ),
     k8sUtils.generateService(
       namespace=$.namespace,
       appName=$.appName,
@@ -72,14 +67,11 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       containers=containers,
       podSpec=k8sUtils.generatePodSpec(
         volumes=[
-          k8sUtils.generateConfigMapVolume(
+          k8sUtils.generateSecretVolume(
             name='config',
-            configMapName=$.appName,
+            secretName='filebrowser-secret',
             items=[
-              k8sUtils.generateVolumeItem(
-                key='config.yaml',
-                path='config.yaml',
-              ),
+              k8sUtils.generateVolumeItem(key='config.yaml', path='config.yaml'),
             ],
           ),
           {

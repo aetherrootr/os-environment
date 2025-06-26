@@ -13,6 +13,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   rulesConfig:: null,
   withHomeAssistantToken:: false,
   disableThanosSidecar:: false,
+  enableAuthProxy:: false,
 
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.appName)],
 
@@ -184,6 +185,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       port=$.port,
       hostnameList=hosts,
       certificateName=$.certificateName,
+      withAuthProxy=$.enableAuthProxy,
     ),
   ]),
 }

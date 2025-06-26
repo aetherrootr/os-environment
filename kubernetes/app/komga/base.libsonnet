@@ -38,10 +38,17 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
         name=$.appName + '-data-pvc',
         mountPath='/data',
       ),
+      k8sUtils.generateVolumeMount(
+        name='application-yml',
+        mountPath='/config/application.yml',
+        subPath='application.yml',
+        readOnly=true,
+      ),
     ],
     env=[
       k8sUtils.generateEnv('TZ', 'Asia/Shanghai'),
       k8sUtils.generateEnv('JAVA_TOOL_OPTIONS', '-Xmx4g'),
+      k8sUtils.generateEnv('KOMGA_OAUTH2_ACCOUNT_CREATION', 'true'),
     ]
   ),
 
@@ -61,6 +68,13 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       containers=containers,
       podSpec=k8sUtils.generatePodSpec(
         volumes=[
+          k8sUtils.generateSecretVolume(
+            name='application-yml',
+            secretName='komga-secret',
+            items=[
+              k8sUtils.generateVolumeItem(key='application.yml', path='application.yml'),
+            ],
+          ),
           {
             name: $.appName + '-data-pvc',
             persistentVolumeClaim: {

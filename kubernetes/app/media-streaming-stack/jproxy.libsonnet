@@ -17,6 +17,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
     k8sUtils.generateEnv(name='PGID', value='1000'),
     k8sUtils.generateEnv(name='TZ', value='Asia/Shanghai'),
     k8sUtils.generateEnv(name='JAVA_OPTS', value='-Xms512m -Xmx512m'),
+    k8sUtils.generateEnv(name='LOGIN_ENABLED', value='false'),
   ]),
 
 

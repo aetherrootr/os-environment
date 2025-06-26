@@ -84,8 +84,8 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
         memory: '256Mi',
       },
       limits: {
-        cpu: '500m',
-        memory: '1Gi',
+        cpu: '1500m',
+        memory: '2Gi',
       },
     },
     env=authentikEnv,

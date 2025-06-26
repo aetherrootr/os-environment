@@ -25,7 +25,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       },
     },
     env=[
-      k8sUtils.generateEnv(name='QBITTORRENT_BASE_URL', value='https://torrent.corp.aetherrootr.com/'),
+      k8sUtils.generateEnv(name='QBITTORRENT_BASE_URL', value='http://qbittorrent.applications-and-services.svc.cluster.local:8923'),
       k8sUtils.generateSecretEnv(name='QBITTORRENT_USERNAME', secretName='prometheus-qbittorrent-exporter-secret', key='username'),
       k8sUtils.generateSecretEnv(name='QBITTORRENT_PASSWORD', secretName='prometheus-qbittorrent-exporter-secret', key='password'),
     ]

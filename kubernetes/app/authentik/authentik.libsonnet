@@ -34,7 +34,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
     k8sUtils.generateSecretEnv(name='AUTHENTIK_POSTGRESQL__PASSWORD', secretName=$.authentikSecretName, key='postgres-password'),
     k8sUtils.generateEnv(name='AUTHENTIK_EMAIL__HOST', value='smtp.fastmail.com'),
     k8sUtils.generateEnv(name='AUTHENTIK_EMAIL__PORT', value='465'),
-    k8sUtils.generateEnv(name='AUTHENTIK_EMAIL__USERNAME', value='aether@aetherroootr.com'),
+    k8sUtils.generateEnv(name='AUTHENTIK_EMAIL__USERNAME', value='aether@aetherrootr.com'),
     k8sUtils.generateSecretEnv(name='AUTHENTIK_EMAIL__PASSWORD', secretName=$.authentikSecretName, key='email-password'),
     k8sUtils.generateEnv(name='AUTHENTIK_EMAIL__USE_SSL', value='true'),
     k8sUtils.generateEnv(name='AUTHENTIK_EMAIL__TIMEOUT', value='30'),

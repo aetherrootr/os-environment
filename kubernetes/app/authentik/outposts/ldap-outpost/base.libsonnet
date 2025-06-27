@@ -5,7 +5,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   appName:: error ('appName is required'),
   replicas:: 1,
 
-  local containerImage = 'ghcr.io/goauthentik/ldap:2025.6.2',
+  local containerImage = 'ghcr.io/goauthentik/ldap:2025.6.3',
 
   local appEnv = std.prune([
     k8sUtils.generateEnv(name='AUTHENTIK_HOST', value='https://authentik.corp.aetherrootr.com'),

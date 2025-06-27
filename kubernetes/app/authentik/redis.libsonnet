@@ -8,7 +8,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   redisDatabasePasswordSecretName:: error ('databasePasswordSecretName is required'),
   replicas:: 1,
 
-  local containerImage = 'bitnami/redis:latest',
+  local containerImage = 'bitnami/redis:8.0.2',
 
   local appEnv = std.prune([
     k8sUtils.generateEnv(name='REDIS_PORT_NUMBER', value=std.toString($.redisDatabasePort)),

@@ -6,7 +6,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   replicas:: 1,
   port:: 8090,
 
-  local containerImage = 'ghcr.io/martabal/qbittorrent-exporter:latest',
+  local containerImage = 'ghcr.io/martabal/qbittorrent-exporter:v1.10.1',
 
   local containers = k8sUtils.generateContainers(
     containerName=$.appName,

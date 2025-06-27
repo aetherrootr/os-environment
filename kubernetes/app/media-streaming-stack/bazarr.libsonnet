@@ -10,7 +10,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
 
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.appName)],
 
-  local containerImage = 'linuxserver/bazarr:latest',
+  local containerImage = 'linuxserver/bazarr:1.5.2',
 
   local appEnv = std.prune([
     k8sUtils.generateEnv(name='PUID', value='1000'),

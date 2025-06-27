@@ -8,7 +8,7 @@ local prometheusDatasource = importstr 'datasource/prometheus.yaml';
   port:: 3000,
   certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
-  local containerImage = 'grafana/grafana:latest',
+  local containerImage = 'grafana/grafana:12.0.2',
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.appName)],
 
 

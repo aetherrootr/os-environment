@@ -10,7 +10,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
 
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.appName)],
 
-  local containerImage = 'nyanmisaka/jellyfin:latest',
+  local containerImage = 'nyanmisaka/jellyfin:250627-amd64',
 
   local appEnv = std.prune([
     k8sUtils.generateEnv(name='PUID', value='0'),

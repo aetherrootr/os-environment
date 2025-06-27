@@ -10,7 +10,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
 
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.appName)],
 
-  local containerImage = 'luckypuppy514/jproxy:latest',
+  local containerImage = 'luckypuppy514/jproxy:v3.4.6',
 
   local appEnv = std.prune([
     k8sUtils.generateEnv(name='PUID', value='1000'),

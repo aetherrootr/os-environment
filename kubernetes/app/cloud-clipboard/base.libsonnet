@@ -7,7 +7,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   port:: 9501,
   certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
-  local containerImage = 'ghcr.io/jonnyan404/cloud-clipboard-go:latest',
+  local containerImage = 'ghcr.io/jonnyan404/cloud-clipboard-go:v4.5.12',
   local hosts = [k8sUtils.getServiceHostname(serviceName='clipboard')],
 
   local containers = k8sUtils.generateContainers(

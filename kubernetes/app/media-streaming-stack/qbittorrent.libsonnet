@@ -111,5 +111,21 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       certificateName=$.certificateName,
       withAuthProxy=true,
     ),
+    k8sUtils.generateIngress(
+      namespace=$.namespace,
+      appName=$.appName + '-api',
+      serviceName=$.appName,
+      annotations={
+        'nginx.ingress.kubernetes.io/auth-type': 'basic',
+        'nginx.ingress.kubernetes.io/auth-secret': 'qbittorrent-secret',
+        'nginx.ingress.kubernetes.io/auth-realm': "qBittorrent App Access",
+      },
+      port=$.port,
+      hostnameList=[
+        k8sUtils.getServiceHostname(serviceName=$.appName + '-api'),
+      ],
+      certificateName=$.certificateName,
+      withAuthProxy=false,
+    )
   ]),
 }

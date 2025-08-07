@@ -51,7 +51,17 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
         subPath='downloads',
       ),
     ],
-  ),
+  ) + {
+    lifecycle: {
+      postStart: {
+        exec: {
+          command: [
+            "/bin/bash", "-c", "echo Shutting down qBittorrent... && sleep 10"
+          ],
+        },
+      },
+    },
+  },
 
   qbittorrent: std.prune([
     k8sUtils.generateService(
@@ -66,6 +76,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       appName=$.appName,
       containers=containers,
       podSpec=k8sUtils.generatePodSpec(
+        terminationGracePeriodSeconds=30,
         volumes=[
           {
             name: $.appName + '-config-pvc',
@@ -118,7 +129,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       annotations={
         'nginx.ingress.kubernetes.io/auth-type': 'basic',
         'nginx.ingress.kubernetes.io/auth-secret': 'qbittorrent-secret',
-        'nginx.ingress.kubernetes.io/auth-realm': "qBittorrent App Access",
+        'nginx.ingress.kubernetes.io/auth-realm': 'qBittorrent App Access',
       },
       port=$.port,
       hostnameList=[
@@ -126,6 +137,6 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       ],
       certificateName=$.certificateName,
       withAuthProxy=false,
-    )
+    ),
   ]),
 }

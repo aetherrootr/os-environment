@@ -41,7 +41,8 @@ local tankaUtils = import 'common/lib/tanka-utils.libsonnet';
                      ports=null,
                      volumeMounts=null,
                      imagePullPolicy='IfNotPresent',
-                     privileged=false):
+                     privileged=false,
+                     lifecycle=null):
     $.tk.container.new(containerName, image)
     + $.tk.container.withImagePullPolicy(imagePullPolicy)
     + (if args != null then $.tk.container.withArgs(args) else {})
@@ -108,6 +109,7 @@ local tankaUtils = import 'common/lib/tanka-utils.libsonnet';
     serviceAccountName=null,
     hostNetwork=false,
     tolerations=null,
+    terminationGracePeriodSeconds=null,
   ):
     $.tk.podSpec.withRestartPolicy(restartPolicy)
     + $.tk.podSpec.withDnsPolicy(dnsPolicy)
@@ -117,7 +119,8 @@ local tankaUtils = import 'common/lib/tanka-utils.libsonnet';
     + (if nodeName != null then $.tk.podSpec.withNodeName(nodeName) else {})
     + (if serviceAccountName != null then $.tk.podSpec.withServiceAccountName(serviceAccountName) else {})
     + (if hostNetwork == true then $.tk.podSpec.withHostNetwork(hostNetwork) else {})
-    + (if tolerations != null then $.tk.podSpec.withTolerations(tolerations) else {}),
+    + (if tolerations != null then $.tk.podSpec.withTolerations(tolerations) else {})
+    + (if terminationGracePeriodSeconds != null then $.tk.podSpec.withTerminationGracePeriodSeconds(terminationGracePeriodSeconds) else {}),
 
   generateService(namespace,
                   appName,

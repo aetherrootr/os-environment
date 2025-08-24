@@ -7,7 +7,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   port:: 9000,
   replicas:: 1,
 
-  local containerImage = 'ghcr.io/goauthentik/proxy:2025.6.3',
+  local containerImage = 'ghcr.io/goauthentik/proxy:2025.8.1',
   
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.appName)],
 

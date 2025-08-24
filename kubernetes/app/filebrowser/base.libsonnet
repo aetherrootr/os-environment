@@ -7,7 +7,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   port:: 8080,
   certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
-  local containerImage = 'gtstef/filebrowser:0.7.10-beta-slim',
+  local containerImage = 'gtstef/filebrowser:0.8.1-beta-slim',
   local hosts = [k8sUtils.getServiceHostname(serviceName='files')],
 
   local appEnv = std.prune([

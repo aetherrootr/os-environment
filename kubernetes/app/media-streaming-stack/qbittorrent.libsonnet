@@ -51,17 +51,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
         subPath='downloads',
       ),
     ],
-  ) + {
-    lifecycle: {
-      postStart: {
-        exec: {
-          command: [
-            "/bin/bash", "-c", "echo Shutting down qBittorrent... && sleep 10"
-          ],
-        },
-      },
-    },
-  },
+  ),
 
   qbittorrent: std.prune([
     k8sUtils.generateService(
@@ -76,7 +66,6 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       appName=$.appName,
       containers=containers,
       podSpec=k8sUtils.generatePodSpec(
-        terminationGracePeriodSeconds=30,
         volumes=[
           {
             name: $.appName + '-config-pvc',

@@ -34,7 +34,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
         memory: '256Mi',
       },
       limits: {
-        cpu: '2000m',
+        cpu: '3000m',
         memory: '8Gi',
       },
     },

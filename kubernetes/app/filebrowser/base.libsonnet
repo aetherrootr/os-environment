@@ -100,9 +100,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       namespace=$.namespace,
       appName=$.appName,
       serviceName=$.appName,
-      annotations={
-        'nginx.ingress.kubernetes.io/proxy-body-size': '10000m',
-      },
+      annotations={},
       port=$.port,
       hostnameList=hosts,
       certificateName=$.certificateName,

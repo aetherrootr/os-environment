@@ -7,7 +7,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   port:: 8080,
   certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
-  local containerImage = 'gtstef/filebrowser:0.8.1-beta-slim',
+  local containerImage = 'gtstef/filebrowser:0.8.3-beta-slim',
   local hosts = [k8sUtils.getServiceHostname(serviceName='files')],
 
   local appEnv = std.prune([
@@ -100,9 +100,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       namespace=$.namespace,
       appName=$.appName,
       serviceName=$.appName,
-      annotations={
-        'nginx.ingress.kubernetes.io/proxy-body-size': '10000m',
-      },
+      annotations={},
       port=$.port,
       hostnameList=hosts,
       certificateName=$.certificateName,

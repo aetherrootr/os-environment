@@ -106,3 +106,7 @@ prometheus:
       - sensor.zhimi_cn_682960752_rma3_pm2_5_density_p_3_4
       - sensor.zhimi_cn_682960752_rma3_temperature_p_3_7
       - sensor.zhimi_cn_682960752_rma3_relative_humidity_p_3_1
+      - sensor.060989628_meter_value
+      - sensor.060989628_total_cost
+      - sensor.060989628_water_tax
+      - sensor.060989628_wastwater_treatment_price

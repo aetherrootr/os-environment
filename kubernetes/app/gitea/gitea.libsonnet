@@ -52,7 +52,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       k8sUtils.generateVolumeMount(
         name=$.appName + '-data-pvc',
         mountPath='/data',
-        subPath=std.strReplace($.appName, '-', '_'),
+        subPath=std.strReplace($.appName + '/gitea', '-', '_'),
       ),
       k8sUtils.generateVolumeMount(
         name='localtime',
@@ -100,7 +100,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
             persistentVolumeClaim: {
               claimName: k8sUtils.getPVCName(
                 namespace=$.namespace,
-                storageClass='data1',
+                storageClass='service-data',
               ),
             },
           },

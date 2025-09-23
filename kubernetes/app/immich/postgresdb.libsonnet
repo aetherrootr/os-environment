@@ -11,12 +11,13 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   replicas:: 1,
   certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
-  local containerImage = 'postgres:14',
+  local containerImage = 'ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0',
 
   local appEnv = std.prune([
     k8sUtils.generateEnv(name='POSTGRES_DB', value=$.databaseName),
     k8sUtils.generateEnv(name='POSTGRES_USER', value=$.databaseUser),
     k8sUtils.generateSecretEnv(name='POSTGRES_PASSWORD', secretName=$.databasePasswordSecretName, key='password'),
+    k8sUtils.generateEnv(name='POSTGRES_INITDB_ARGS', value='--data-checksums')
   ]),
 
 

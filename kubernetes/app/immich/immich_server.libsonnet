@@ -27,7 +27,6 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
     k8sUtils.generateEnv(name='REDIS_HOSTNAME', value=$.redisDatabaseHost),
     k8sUtils.generateEnv(name='REDIS_PORT', value=std.toString($.redisDatabasePort)),
     k8sUtils.generateEnv(name='IMMICH_PORT', value=std.toString($.immichServerPort)),
-    k8sUtils.generateEnv(name='IMMICH_TELEMETRY_INCLUDE', value='all'),
   ]),
 
   local containers = k8sUtils.generateContainers(
@@ -66,8 +65,6 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       appName=$.appName,
       ports=[
         k8sUtils.generateServicePort(name='http', port=$.immichServerPort, targetPort=$.immichServerPort),
-        k8sUtils.generateServicePort(name='api-metrics', port=8081, targetPort=8081),
-        k8sUtils.generateServicePort(name='microservices-metrics', port=8082, targetPort=8082),
       ],
     ),
     k8sUtils.generateDeployment(

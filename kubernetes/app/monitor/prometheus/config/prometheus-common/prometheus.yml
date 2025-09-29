@@ -72,3 +72,11 @@ scrape_configs:
   - job_name: "qbittorrent"
     static_configs:
       - targets: ["qbittorrent-exporter.infrastructure.svc.cluster.local:8090"]
+  
+  - job_name: immich_api
+    static_configs:
+      - targets: [immich.applications-and-services.svc.cluster.local:8081]
+  
+  - job_name: immich_microservices
+    static_configs:
+      - targets: [immich.applications-and-services.svc.cluster.local:8082]

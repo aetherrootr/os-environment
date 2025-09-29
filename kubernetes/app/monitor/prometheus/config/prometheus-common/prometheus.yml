@@ -62,6 +62,12 @@ scrape_configs:
     scheme: http
     static_configs:
       - targets: ['tailscale-exit-node.corp.aetherrootr.com:8080']
+  
+  - job_name: 'tailscale-backup'
+    metrics_path: /metrics
+    scheme: http
+    static_configs:
+      - targets: ['tailscale-backup-exit-node.corp.aetherrootr.com:8080']
 
   - job_name: "qbittorrent"
     static_configs:

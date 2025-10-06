@@ -10,7 +10,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
 
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.appName)],
 
-  local containerImage = 'linuxserver/radarr:amd64-5.27.1-nightly',
+  local containerImage = 'linuxserver/radarr:amd64-6.0.3-nightly',
 
   local appEnv = std.prune([
     k8sUtils.generateEnv(name='PUID', value='1000'),

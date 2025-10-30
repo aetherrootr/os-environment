@@ -107,7 +107,8 @@ local tankaUtils = import 'common/lib/tanka-utils.libsonnet';
     dnsPolicy='ClusterFirst',
     serviceAccountName=null,
     hostNetwork=false,
-    tolerations=null):
+    tolerations=null
+  ):
     $.tk.podSpec.withRestartPolicy(restartPolicy)
     + $.tk.podSpec.withDnsPolicy(dnsPolicy)
     + (if volumes != null then $.tk.podSpec.withVolumes(volumes) else {})
@@ -171,20 +172,20 @@ local tankaUtils = import 'common/lib/tanka-utils.libsonnet';
     + $.tk.ingress.spec.withIngressClassName(ingressClass)
     + $.tk.ingress.metadata.withAnnotations(
       (if withCertManager then {
-           'nginx.ingress.kubernetes.io/ssl-redirect': 'true',
-           'nginx.ingress.kubernetes.io/force-ssl-redirect': 'true',
-           'nginx.ingress.kubernetes.io/use-port-in-redirects': 'true',
-         } + (if certificateName == null then {
-                'cert-manager.io/cluster-issuer': 'letsencrypt-dns-cloudflare',
-                'cert-manager.io/common-name': hostnameList[0],
-              } else {})
-         else {})
+         'nginx.ingress.kubernetes.io/ssl-redirect': 'true',
+         'nginx.ingress.kubernetes.io/force-ssl-redirect': 'true',
+         'nginx.ingress.kubernetes.io/use-port-in-redirects': 'true',
+       } + (if certificateName == null then {
+              'cert-manager.io/cluster-issuer': 'letsencrypt-dns-cloudflare',
+              'cert-manager.io/common-name': hostnameList[0],
+            } else {})
+       else {})
       + (if withAuthProxy then {
-           'nginx.ingress.kubernetes.io/auth-url': $.getAuthProxyOutpostServiceUrl(appName,namespace) +'/outpost.goauthentik.io/auth/nginx',
+           'nginx.ingress.kubernetes.io/auth-url': $.getAuthProxyOutpostServiceUrl(appName, namespace) + '/outpost.goauthentik.io/auth/nginx',
            'nginx.ingress.kubernetes.io/auth-signin': 'https://' + hostnameList[0] + '/outpost.goauthentik.io/start?rd=$scheme://$http_host$escaped_request_uri',
            'nginx.ingress.kubernetes.io/auth-response-headers': 'Set-Cookie,X-authentik-username,X-authentik-groups,X-authentik-email,X-authentik-name,X-authentik-uid',
            'nginx.ingress.kubernetes.io/use-regex': 'true',
-      } else {})
+         } else {})
       + annotations
     )
     + (if withCertManager then $.tk.ingress.spec.withTls([{
@@ -258,4 +259,47 @@ local tankaUtils = import 'common/lib/tanka-utils.libsonnet';
     tankaUtils.helm.new(projectPath).template(
       name, chart, config
     ),
+
+  generateCronJob(namespace,
+                  appName,
+                  jobSpec,
+                  schedule,
+                  containers,
+                  extraLabels={}):
+    $.tk.cronJob.new(appName, schedule, containers)
+    + defaultMetadata(appName, namespace, extraLabels)
+    + {
+      spec+: jobSpec,
+    },
+
+  generateCronJobSpec(appName,
+                      podSpec,
+                      extraLabels={},
+                      timeZone='Asia/Shanghai',
+                      concurrencyPolicy='Forbid',
+                      failedJobsHistoryLimit=null,
+                      successfulJobsHistoryLimit=null,
+                      startingDeadlineSeconds=null,
+                      suspend=false,
+                      backoffLimit=3,
+                      restartPolicy='OnFailure'):
+    $.tk.cronJobSpec.jobTemplate.metadata.withLabels({ app: appName } + extraLabels)
+    + $.tk.cronJobSpec.jobTemplate.spec.template.metadata.withLabels({ app: appName } + extraLabels)
+    + $.tk.cronJobSpec.withTimeZone(timeZone)
+    + $.tk.cronJobSpec.withConcurrencyPolicy(concurrencyPolicy)
+    + $.tk.cronJobSpec.jobTemplate.spec.withBackoffLimit(backoffLimit)
+    + (if failedJobsHistoryLimit != null then $.tk.cronJobSpec.withFailedJobsHistoryLimit(failedJobsHistoryLimit) else {})
+    + (if successfulJobsHistoryLimit != null then $.tk.cronJobSpec.withSuccessfulJobsHistoryLimit(successfulJobsHistoryLimit) else {})
+    + (if startingDeadlineSeconds != null then $.tk.cronJobSpec.withStartingDeadlineSeconds(startingDeadlineSeconds) else {})
+    + (if suspend != false then $.tk.cronJobSpec.withSuspend(suspend) else {})
+    + {
+      jobTemplate+: {
+        spec+: {
+          template+: {
+            spec+: podSpec
+                   { restartPolicy: restartPolicy },
+          },
+        },
+      },
+    },
 }

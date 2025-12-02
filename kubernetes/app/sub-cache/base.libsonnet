@@ -7,7 +7,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   port:: 8080,
   certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
-  local containerImage = 'aethertaberu/sub-cache:0.0.2',
+  local containerImage = 'aethertaberu/sub-cache:0.0.3',
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.appName)],
 
 

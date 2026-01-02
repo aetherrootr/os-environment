@@ -7,7 +7,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   port:: 8080,
   certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
-  local containerImage = 'aethertaberu/sub-cache:0.0.2',
+  local containerImage = 'aethertaberu/sub-cache:1.0.0',
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.appName)],
 
 
@@ -29,8 +29,8 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
     },
     volumeMounts=[
       k8sUtils.generateVolumeMount(
-        name=$.appName + '-config-pvc',
-        mountPath='/config',
+        name=$.appName + '-work-pvc',
+        mountPath='/work',
         subPath=std.strReplace($.appName, '-', '_'),
       ),
     ],
@@ -53,7 +53,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       podSpec=k8sUtils.generatePodSpec(
         volumes=[
           {
-            name: $.appName + '-config-pvc',
+            name: $.appName + '-work-pvc',
             persistentVolumeClaim: {
               claimName: k8sUtils.getPVCName(
                 namespace=$.namespace,

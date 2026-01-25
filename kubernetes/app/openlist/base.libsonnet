@@ -40,11 +40,14 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       ),
     ],
     env=[
-      k8sUtils.generateEnv('PUID', '0'),
-      k8sUtils.generateEnv('PGID', '0'),
       k8sUtils.generateEnv('UMASK', '022'),
     ]
-  ),
+  ) + {
+    securityContext: {
+      runAsUser: 0,
+      runAsGroup: 0,
+    },
+  },
 
   apiVersion: 'apps/v1',
   kind: 'list',

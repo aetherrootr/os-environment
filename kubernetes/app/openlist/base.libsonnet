@@ -7,7 +7,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   port:: 5244,
   certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
-  local containerImage = 'openlistteam/openlist:v4.0.8-aio',
+  local containerImage = 'openlistteam/openlist:v4.1.9-aio',
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.appName)],
 
 

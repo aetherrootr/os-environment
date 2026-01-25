@@ -8,7 +8,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
   urlPrefix:: 'library',
 
-  local containerImage = 'gotson/komga:1.22.0',
+  local containerImage = 'gotson/komga:1.23.6',
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.urlPrefix)],
 
 
@@ -49,6 +49,8 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       k8sUtils.generateEnv('TZ', 'Asia/Shanghai'),
       k8sUtils.generateEnv('JAVA_TOOL_OPTIONS', '-Xmx4g'),
       k8sUtils.generateEnv('KOMGA_OAUTH2_ACCOUNT_CREATION', 'true'),
+      k8sUtils.generateEnv('KOMGA_DATABASE_CHECKLOCALFILESYSTEM', 'FALSE'),
+      k8sUtils.generateEnv('KOMGA_TASKSDB_CHECKLOCALFILESYSTEM', 'FALSE'),
     ]
   ),
 

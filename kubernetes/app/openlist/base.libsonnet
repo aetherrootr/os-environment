@@ -7,7 +7,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   port:: 5244,
   certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
-  local containerImage = 'openlistteam/openlist:v4.0.8-aio',
+  local containerImage = 'openlistteam/openlist:v4.1.9-aio',
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.appName)],
 
 
@@ -40,11 +40,14 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       ),
     ],
     env=[
-      k8sUtils.generateEnv('PUID', '0'),
-      k8sUtils.generateEnv('PGID', '0'),
       k8sUtils.generateEnv('UMASK', '022'),
     ]
-  ),
+  ) + {
+    securityContext: {
+      runAsUser: 0,
+      runAsGroup: 0,
+    },
+  },
 
   apiVersion: 'apps/v1',
   kind: 'list',

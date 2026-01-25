@@ -10,7 +10,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
 
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.appName)],
 
-  local containerImage = 'linuxserver/sonarr:version-4.0.15.2941',
+  local containerImage = 'linuxserver/sonarr:4.0.16',
 
   local appEnv = std.prune([
     k8sUtils.generateEnv(name='PUID', value='1000'),

@@ -31,11 +31,11 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
     resources={
       requests: {
         cpu: '100m',
-        memory: '256Mi',
+        memory: '1Gi',
       },
       limits: {
         cpu: '3000m',
-        memory: '4Gi',
+        memory: '7Gi',
       },
     },
     env=appEnv,

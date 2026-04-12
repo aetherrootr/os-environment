@@ -14,7 +14,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
 
   local hosts = [k8sUtils.getServiceHostname(serviceName='wiki')],
 
-  local containerImage = 'ghcr.io/requarks/wiki:2',
+  local containerImage = 'ghcr.io/requarks/wiki:2.5.312',
   local initContainerImage = 'busybox:1.35.0',
 
   local appEnv = std.prune([

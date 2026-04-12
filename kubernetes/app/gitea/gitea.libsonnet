@@ -14,7 +14,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
 
   local hosts = [k8sUtils.getServiceHostname(serviceName='gitea')],
 
-  local containerImage = 'docker.gitea.com/gitea:1.23.8',
+  local containerImage = 'docker.gitea.com/gitea:1.25.5',
   local initContainerImage = 'busybox:1.35.0',
 
   local appEnv = std.prune([

@@ -6,7 +6,7 @@ local redis = import 'redis.libsonnet';
 {
   namespace:: error ('namespace is required'),
   appName:: error ('appName is required'),
-  immichVersion:: 'v2.4.1',
+  immichVersion:: 'v2.7.4',
   postgresDatabaseHost:: $.appName + '-postgresdb',
   postgresDatabasePort:: 5432,
   postgresDatabaseName:: $.appName,

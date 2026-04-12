@@ -9,7 +9,7 @@ local homeassistantConfig = importstr 'config/configuration.yaml';
   certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
   urlPrefix:: 'ha',
 
-  local containerImage = 'ghcr.io/home-assistant/home-assistant:2025.11.3',
+  local containerImage = 'ghcr.io/home-assistant/home-assistant:2026.4.2',
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.urlPrefix)],
 
   local containers = k8sUtils.generateContainers(

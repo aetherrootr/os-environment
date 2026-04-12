@@ -8,7 +8,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
   urlPrefix:: 'library',
 
-  local containerImage = 'gotson/komga:1.23.6',
+  local containerImage = 'gotson/komga:1.24.3',
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.urlPrefix)],
 
 

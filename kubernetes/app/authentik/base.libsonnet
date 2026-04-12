@@ -1,27 +1,15 @@
 local authentik = import 'authentik.libsonnet';
 local postgresdb = import 'postgresdb.libsonnet';
-local redis = import 'redis.libsonnet';
 
 {
   namespace:: error ('namespace is required'),
   appName:: 'authentik',
   authentikSecretName:: 'authentik-secret',
-  redisDatabaseHost:: $.appName + '-redis',
-  redisDatabasePort:: 6379,
-  redisDatabasePasswordSecretName:: $.authentikSecretName,
   databaseHost:: $.appName + '-postgres',
   databasePort:: 5432,
   databaseName:: $.appName,
   databaseUser:: $.appName,
   databasePasswordSecretName:: $.authentikSecretName,
-
-  local redisResources = redis {
-    namespace: $.namespace,
-    appName: $.redisDatabaseHost,
-    redisDatabaseHost: $.redisDatabaseHost,
-    redisDatabasePort: $.redisDatabasePort,
-    redisDatabasePasswordSecretName: $.redisDatabasePasswordSecretName,
-  },
 
   local postgresResources = postgresdb {
     namespace: $.namespace,
@@ -37,8 +25,6 @@ local redis = import 'redis.libsonnet';
     namespace: $.namespace,
     appName: $.appName,
     authentikSecretName: $.authentikSecretName,
-    redisDatabaseHost: $.redisDatabaseHost,
-    redisDatabasePort: $.redisDatabasePort,
     databaseHost: $.databaseHost,
     databasePort: $.databasePort,
     databaseName: $.databaseName,
@@ -48,8 +34,7 @@ local redis = import 'redis.libsonnet';
   apiVersion: 'apps/v1',
   kind: 'list',
   items: std.prune(
-    redisResources.redis
-    + postgresResources.postgresdb
+    postgresResources.postgresdb
     + authentikResources.authentik
   ),
 }

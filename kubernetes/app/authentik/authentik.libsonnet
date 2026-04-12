@@ -4,8 +4,6 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   namespace:: error ('namespace is required'),
   appName:: error ('appName is required'),
   authentikSecretName:: error ('authentikSecretKeySecretName is required'),
-  redisDatabaseHost:: error ('databaseHost is required'),
-  redisDatabasePort:: error ('databasePort is required'),
   databaseHost:: error ('databaseHost is required'),
   databasePort:: error ('databasePort is required'),
   databaseName:: error ('databaseName is required'),
@@ -18,15 +16,12 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   serverReplicas:: 1,
   workerReplicas:: 2,
 
-  local containerImage = 'ghcr.io/goauthentik/server:2025.8.1',
+  local containerImage = 'ghcr.io/goauthentik/server:2026.2.2',
 
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.appName)],
 
   local authentikEnv = std.prune([
     k8sUtils.generateSecretEnv(name='AUTHENTIK_SECRET_KEY', secretName=$.authentikSecretName, key='authentik-secret-key'),
-    k8sUtils.generateEnv(name='AUTHENTIK_REDIS__HOST', value=$.redisDatabaseHost),
-    k8sUtils.generateEnv(name='AUTHENTIK_REDIS__PORT', value=std.toString($.redisDatabasePort)),
-    k8sUtils.generateSecretEnv(name='AUTHENTIK_REDIS__PASSWORD', secretName=$.authentikSecretName, key='redis-password'),
     k8sUtils.generateEnv(name='AUTHENTIK_POSTGRESQL__HOST', value=$.databaseHost),
     k8sUtils.generateEnv(name='AUTHENTIK_POSTGRESQL__PORT', value=std.toString($.databasePort)),
     k8sUtils.generateEnv(name='AUTHENTIK_POSTGRESQL__NAME', value=$.databaseName),
@@ -63,8 +58,8 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
     volumeMounts=[
       k8sUtils.generateVolumeMount(
         name=$.appName + '-config-pvc',
-        mountPath='/media',
-        subPath=std.strReplace($.appName + '/media', '-', '_'),
+        mountPath='/data',
+        subPath=std.strReplace($.appName + '/data', '-', '_'),
       ),
       k8sUtils.generateVolumeMount(
         name=$.appName + '-config-pvc',

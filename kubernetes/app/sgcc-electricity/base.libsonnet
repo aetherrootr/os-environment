@@ -6,7 +6,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   replicas:: 1,
   certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
-  local containerImage = 'arcw/sgcc_electricity:v1.6.6',
+  local containerImage = 'arcw/sgcc_electricity:v1.7.3',
 
   local appEnv = std.prune([
     k8sUtils.generateEnv(name='SET_CONTAINER_TIMEZONE', value='true'),

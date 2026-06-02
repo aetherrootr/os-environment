@@ -8,7 +8,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   databasePort:: error ('databasePort is required'),
   databaseName:: error ('databaseName is required'),
   databaseUser:: error ('databaseUser is required'),
-  certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
+  certificateName:: $.namespace + '-authentik-certificate-tls',
 
   authentikHttpPort:: 9000,
   authentikMetricsPort:: 9300,
@@ -16,9 +16,9 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   serverReplicas:: 1,
   workerReplicas:: 2,
 
-  local containerImage = 'ghcr.io/goauthentik/server:2026.2.3',
+  local containerImage = 'ghcr.io/goauthentik/server:2026.5.2',
 
-  local hosts = [k8sUtils.getServiceHostname(serviceName=$.appName)],
+  local hosts = ['authentik.aetherrootr.com'],
 
   local authentikEnv = std.prune([
     k8sUtils.generateSecretEnv(name='AUTHENTIK_SECRET_KEY', secretName=$.authentikSecretName, key='authentik-secret-key'),

@@ -7,12 +7,13 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   port:: 9000,
   replicas:: 1,
 
-  local containerImage = 'ghcr.io/goauthentik/proxy:2026.2.3',
+  local containerImage = 'ghcr.io/goauthentik/proxy:2026.5.2',
   
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.appName)],
 
   local appEnv = std.prune([
-    k8sUtils.generateEnv(name='AUTHENTIK_HOST', value='https://authentik.corp.aetherrootr.com'),
+    k8sUtils.generateEnv(name='AUTHENTIK_HOST', value='http://authentik-server.infrastructure.svc.cluster.local:9000'),
+    k8sUtils.generateEnv(name='AUTHENTIK_HOST_BROWSER', value='https://authentik.aetherrootr.com'),
     k8sUtils.generateEnv(name='AUTHENTIK_INSECURE', value='false'),
     k8sUtils.generateSecretEnv(name='AUTHENTIK_TOKEN', secretName=$.authentikTokenSecretName, key='authentik-proxy-outpost-token'),
   ]),

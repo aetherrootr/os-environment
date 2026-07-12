@@ -9,20 +9,19 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   databaseUser:: error ('databaseUser is required'),
   databasePasswordSecretName:: error ('databasePasswordSecretName is required'),
   replicas:: 1,
-  certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
-  local containerImage = 'ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0',
+  local containerImage = 'postgres:17-alpine',
 
   local appEnv = std.prune([
     k8sUtils.generateEnv(name='POSTGRES_DB', value=$.databaseName),
     k8sUtils.generateEnv(name='POSTGRES_USER', value=$.databaseUser),
     k8sUtils.generateSecretEnv(name='POSTGRES_PASSWORD', secretName=$.databasePasswordSecretName, key='password'),
-    k8sUtils.generateEnv(name='POSTGRES_INITDB_ARGS', value='--data-checksums')
+    k8sUtils.generateEnv(name='TZ', value='Asia/Shanghai')
   ]),
 
 
   local containers = k8sUtils.generateContainers(
-    containerName=$.databaseName,
+    containerName=$.databaseHost,
     image=containerImage,
     ports=[
       k8sUtils.generateContainerPort(name='http', containerPort=$.databasePort),
@@ -45,7 +44,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
         subPath=std.strReplace($.appName + '/postgres', '-', '_'),
       ),
     ],
-    command=["redis-server", "--appendonly", "yes"],
+    
   ),
 
   postgresdb: std.prune([

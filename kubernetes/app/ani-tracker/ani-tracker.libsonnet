@@ -14,10 +14,10 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   databasePasswordSecretName:: error ('databasePasswordSecretName is required'),
   appSecretName:: error ('appSecretName is required'),
 
-  image:: 'ghcr.io/aetherrootr/ani-tracker:v0.0.2',
+  image:: 'docker pull ghcr.io/aetherrootr/ani-tracker:v0.0.3',
   certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
   replicas:: 1,
-  workerReplicas:: 2,
+  workerReplicas:: 1,
 
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.appName)],
   local databaseUrl = 'postgresql+psycopg://' + $.databaseUser + ':$(POSTGRES_PASSWORD)@' + $.databaseHost + ':' + std.toString($.databasePort) + '/' + $.databaseName,
@@ -32,7 +32,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
     k8sUtils.generateEnv(name='DATABASE_URL', value=databaseUrl),
     k8sUtils.generateEnv(name='CELERY_BROKER_URL', value='redis://' + $.redisDatabaseHost + ':' + std.toString($.redisDatabasePort) + '/0'),
     k8sUtils.generateEnv(name='CELERY_RESULT_BACKEND', value='redis://' + $.redisDatabaseHost + ':' + std.toString($.redisDatabasePort) + '/1'),
-    k8sUtils.generateEnv(name='ANIME_POSTER_STORAGE_DIR', value='/var/lib/ani-tracker/posters'),
+    k8sUtils.generateEnv(name='ANIME_TRACKER_INSTANCE_PATH', value='/var/lib/ani-tracker'),
     k8sUtils.generateEnv(name='SESSION_COOKIE_SAMESITE', value='Lax'),
     k8sUtils.generateEnv(name='WEB_CONCURRENCY', value='2'),
     k8sUtils.generateEnv(name='TZ', value='Asia/Shanghai'),
@@ -45,8 +45,10 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
     k8sUtils.generateEnv(name='OIDC_CLIENT_ID', value='S65u8uf3NpVOHPQt4rWX5LTmwGxQFoXt7r1gSk45'),
     k8sUtils.generateSecretEnv(name='OIDC_CLIENT_SECRET', secretName=$.appSecretName, key='oidc-client-secret'),
     k8sUtils.generateEnv(name='OIDC_SCOPE', value='openid email profile'),
-    k8sUtils.generateEnv(name='IMPORT_PROVIDER_TIMEOUT', value='80'),
-    k8sUtils.generateEnv(name='GUNICORN_TIMEOUT', value='120'),
+    k8sUtils.generateEnv(name='IMPORT_PROVIDER_TIMEOUT', value='10'),
+    k8sUtils.generateEnv(name='IMPORT_SEARCH_TIMEOUT', value='120'),
+    k8sUtils.generateEnv(name='GUNICORN_TIMEOUT', value='1000'),
+    k8sUtils.generateEnv(name='AUTO_IMPORT_TVDB_SEASONS_ENABLED', value='true'),
   ]),
 
   local waitForPostgresContainer = k8sUtils.generateContainers(
@@ -80,16 +82,15 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
         memory: '256Mi',
       },
       limits: {
-        cpu: '1000m',
-        memory: '1Gi',
+        memory: '10Gi',
       },
     },
     env=appEnv,
     volumeMounts=[
       k8sUtils.generateVolumeMount(
         name=$.appName + '-data-pvc',
-        mountPath='/var/lib/ani-tracker/posters',
-        subPath=std.strReplace($.appName + '/posters', '-', '_'),
+        mountPath='/var/lib/ani-tracker',
+        subPath=std.strReplace($.appName + '/' + $.appName, '-', '_'),
       ),
     ],
   ),
@@ -109,16 +110,15 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
         memory: '256Mi',
       },
       limits: {
-        cpu: '1000m',
-        memory: '1Gi',
+        memory: '10Gi',
       },
     },
     env=appEnv,
     volumeMounts=[
       k8sUtils.generateVolumeMount(
         name=$.appName + '-data-pvc',
-        mountPath='/var/lib/ani-tracker/posters',
-        subPath=std.strReplace($.appName + '/posters', '-', '_'),
+        mountPath='/var/lib/ani-tracker',
+        subPath=std.strReplace($.appName + '/' + $.appName, '-', '_'),
       ),
     ],
   ),

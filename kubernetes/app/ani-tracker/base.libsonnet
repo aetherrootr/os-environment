@@ -1,4 +1,5 @@
 local aniTracker = import 'ani-tracker.libsonnet';
+local cronjob = import 'cronjob.libsonnet';
 local postgres = import 'postgres.libsonnet';
 local redis = import 'redis.libsonnet';
 
@@ -46,11 +47,22 @@ local redis = import 'redis.libsonnet';
     redisDatabasePort: $.redisDatabasePort,
   },
 
+  local cronjobResources = cronjob {
+    namespace: $.namespace,
+    appName: $.appName,
+    databaseHost: $.databaseHost,
+    databasePort: $.databasePort,
+    databaseName: $.databaseName,
+    databaseUser: $.databaseUser,
+    databasePasswordSecretName: $.databasePasswordSecretName,
+  },
+
   apiVersion: 'apps/v1',
   kind: 'list',
   items: std.prune(
     aniTrackerResources.aniTracker +
     postgresResources.postgresdb +
-    redisResources.redis
+    redisResources.redis +
+    cronjobResources.cron
   ),
 }

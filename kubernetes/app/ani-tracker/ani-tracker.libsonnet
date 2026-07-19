@@ -14,10 +14,11 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   databasePasswordSecretName:: error ('databasePasswordSecretName is required'),
   appSecretName:: error ('appSecretName is required'),
 
-  image:: 'ghcr.io/aetherrootr/ani-tracker:v0.1.0',
+  image:: 'ghcr.io/aetherrootr/ani-tracker:v0.1.2',
   certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
   replicas:: 1,
   workerReplicas:: 1,
+  beatReplicas:: 1,
 
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.appName)],
   local databaseUrl = 'postgresql+psycopg://' + $.databaseUser + ':$(POSTGRES_PASSWORD)@' + $.databaseHost + ':' + std.toString($.databasePort) + '/' + $.databaseName,
@@ -48,6 +49,8 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
     k8sUtils.generateEnv(name='IMPORT_PROVIDER_TIMEOUT', value='10'),
     k8sUtils.generateEnv(name='IMPORT_SEARCH_TIMEOUT', value='120'),
     k8sUtils.generateEnv(name='GUNICORN_TIMEOUT', value='1000'),
+    k8sUtils.generateEnv(name='ANIME_SYNC_CRON_HOUR', value='4,12,20'),
+    k8sUtils.generateEnv(name='ANIME_SYNC_CRON_MINUTE', value='0'),
     k8sUtils.generateEnv(name='AUTO_IMPORT_TVDB_SEASONS_ENABLED', value='true'),
     k8sUtils.generateEnv(name='AUTO_IMPORT_BANGUMI_RELATED_ANIME_ENABLED', value='true'),
     k8sUtils.generateEnv(name='APP_FAVICON_FILE', value='/opt/ani-tracker/branding/favicon.ico'),
@@ -137,6 +140,36 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
     ],
   ),
 
+  local beatContainers = k8sUtils.generateContainers(
+    containerName=$.appName + '-beat',
+    image=$.image,
+    command=['python', '/opt/ani-tracker/backend/ani-tracker.pyz'],
+    args=[
+      'beat',
+      '--loglevel',
+      'info',
+      '--schedule',
+      '/var/lib/ani-tracker/celerybeat-schedule',
+    ],
+    resources={
+      requests: {
+        cpu: '100m',
+        memory: '256Mi',
+      },
+      limits: {
+        memory: '10Gi',
+      },
+    },
+    env=appEnv,
+    volumeMounts=[
+      k8sUtils.generateVolumeMount(
+        name=$.appName + '-data-pvc',
+        mountPath='/var/lib/ani-tracker',
+        subPath=std.strReplace($.appName + '/' + $.appName, '-', '_'),
+      ),
+    ],
+  ),
+
   aniTracker: std.prune([
     k8sUtils.generateService(
       namespace=$.namespace,
@@ -184,6 +217,26 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
         ],
       ),
       replicas=$.workerReplicas,
+    ),
+    k8sUtils.generateDeployment(
+      namespace=$.namespace,
+      appName=$.appName + '-beat',
+      containers=beatContainers,
+      podSpec=k8sUtils.generatePodSpec(
+        initContainers=[waitForPostgresContainer],
+        volumes=[
+          {
+            name: $.appName + '-data-pvc',
+            persistentVolumeClaim: {
+              claimName: k8sUtils.getPVCName(
+                namespace=$.namespace,
+                storageClass='service-data',
+              ),
+            },
+          },
+        ],
+      ),
+      replicas=$.beatReplicas,
     ),
     k8sUtils.generateIngress(
       namespace=$.namespace,

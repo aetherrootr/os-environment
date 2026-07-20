@@ -14,7 +14,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   databasePasswordSecretName:: error ('databasePasswordSecretName is required'),
   appSecretName:: error ('appSecretName is required'),
 
-  image:: 'ghcr.io/aetherrootr/ani-tracker:v0.1.2',
+  image:: 'ghcr.io/aetherrootr/ani-tracker:v0.1.3',
   certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
   replicas:: 1,
   workerReplicas:: 1,

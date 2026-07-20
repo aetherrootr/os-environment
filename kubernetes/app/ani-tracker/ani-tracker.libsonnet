@@ -49,7 +49,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
     k8sUtils.generateEnv(name='IMPORT_PROVIDER_TIMEOUT', value='10'),
     k8sUtils.generateEnv(name='IMPORT_SEARCH_TIMEOUT', value='120'),
     k8sUtils.generateEnv(name='GUNICORN_TIMEOUT', value='1000'),
-    k8sUtils.generateEnv(name='ANIME_SYNC_CRON_HOUR', value='4,12,20'),
+    k8sUtils.generateEnv(name='ANIME_SYNC_CRON_HOUR', value='0,4,8,12,16,20'),
     k8sUtils.generateEnv(name='ANIME_SYNC_CRON_MINUTE', value='0'),
     k8sUtils.generateEnv(name='AUTO_IMPORT_TVDB_SEASONS_ENABLED', value='true'),
     k8sUtils.generateEnv(name='AUTO_IMPORT_BANGUMI_RELATED_ANIME_ENABLED', value='true'),

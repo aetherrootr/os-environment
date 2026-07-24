@@ -14,7 +14,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   databasePasswordSecretName:: error ('databasePasswordSecretName is required'),
   appSecretName:: error ('appSecretName is required'),
 
-  image:: 'ghcr.io/aetherrootr/ani-tracker:v0.1.7',
+  image:: 'ghcr.io/aetherrootr/ani-tracker:v0.1.9',
   certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
   replicas:: 1,
   workerReplicas:: 1,
@@ -49,8 +49,6 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
     k8sUtils.generateEnv(name='IMPORT_PROVIDER_TIMEOUT', value='10'),
     k8sUtils.generateEnv(name='IMPORT_SEARCH_TIMEOUT', value='120'),
     k8sUtils.generateEnv(name='GUNICORN_TIMEOUT', value='1000'),
-    k8sUtils.generateEnv(name='ANIME_SYNC_CRON_HOUR', value='0,4,8,12,16,20'),
-    k8sUtils.generateEnv(name='ANIME_SYNC_CRON_MINUTE', value='0'),
     k8sUtils.generateEnv(name='AUTO_IMPORT_TVDB_SEASONS_ENABLED', value='true'),
     k8sUtils.generateEnv(name='AUTO_IMPORT_BANGUMI_RELATED_ANIME_ENABLED', value='true'),
     k8sUtils.generateEnv(name='APP_FAVICON_FILE', value='/opt/ani-tracker/branding/favicon.ico'),
@@ -59,7 +57,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
     k8sUtils.generateEnv(name='APP_PWA_ICON_MASKABLE_FILE', value='/opt/ani-tracker/branding/icon-maskable-512x512.png'),
     k8sUtils.generateEnv(name='APP_APPLE_TOUCH_ICON_FILE', value='/opt/ani-tracker/branding/apple-touch-icon.png'),
     k8sUtils.generateEnv(name='USER_WALLPAPER_MAX_IMAGES_PER_USER', value='50'),
-    k8sUtils.generateEnv(name='USER_WALLPAPER_MAX_BYTES', value='104857600')
+    k8sUtils.generateEnv(name='USER_WALLPAPER_MAX_BYTES', value='20971520')
   ]),
 
   local waitForPostgresContainer = k8sUtils.generateContainers(

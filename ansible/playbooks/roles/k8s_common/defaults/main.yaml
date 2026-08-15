@@ -1,0 +1,19 @@
+---
+# Package management
+k8s_package_revision: "-1.1"
+k8s_package_names: []
+
+# Add-ons
+k8s_kubeconfig: /etc/kubernetes/admin.conf
+k8s_calico_version: ""
+k8s_cert_manager_version: ""
+k8s_ingress_nginx_version: ""
+k8s_cert_rotation_guard: false
+k8s_cert_rotation_policy_confirmed: false
+k8s_ingress_cleanup_admission_jobs: false
+k8s_ingress_http_node_port: 30080
+k8s_ingress_https_node_port: 30443
+
+# Cluster health checks
+k8s_expected_version: ""
+k8s_require_same_minor: true

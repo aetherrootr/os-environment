@@ -18,7 +18,7 @@
     - overlay
 
 - name: setup sysctl params
-  sysctl:
+  ansible.posix.sysctl:
     name: "{{ item }}"
     value: '1'
     sysctl_file: /etc/sysctl.d/10-k8s.conf

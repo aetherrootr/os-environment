@@ -1,67 +1,98 @@
 #!/bin/bash
 
-set -e -x
+set -euo pipefail
 
-if  [[ $EUID -ne 0 ]]; then
-  echo "This Script must be run as root"
-  exit 1
-fi
+readonly SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)"
+readonly ANSIBLE_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/os-environment-ansible"
+readonly ANSIBLE_VENV="${ANSIBLE_HOME}/venv"
+readonly USER_BIN_DIR="${HOME}/.local/bin"
 
-if [ ! -x /usr/bin/lsb_release ]; then
-  apt-get update
-  apt-get install -y --no-install-recommands lsb_release
-fi
-
-readonly UBUNTU_VERSION="$(lsb_release -sc)"
-if [[ "$UBUNTU_VERSION" != xenial && "$UBUNTU_VERSION" != bionic && "$UBUNTU_VERSION" != focal && "$UBUNTU_VERSION" != jammy ]]; then
-  echo "This scipt only supports Ubuntu 16.04 or Ubuntu 18.04 or Ubuntu 20.04 or Ubuntu 22.04."
-  exit 2
-fi
-
-ansible_version="2.13.7"
-jinjia2_version="3.1.2"
-
-function delete_pip_package_if_exists() {
-  package_name=$1
-  if python3 -m pip show $package_name; then
-      python3 -m pip uninstall $package_name -y
+run_privileged() {
+  if [[ ${EUID} -eq 0 ]]; then
+    "$@"
+  elif command -v sudo >/dev/null 2>&1; then
+    sudo "$@"
+  else
+    echo "sudo is required to install system packages"
+    exit 1
   fi
 }
 
-function install_ansible {
-  apt-get update
-
-  # Delete unexpected ansible
-  apt-get remove ansible -y
-  # Here we use sshpass to manage our passwords,
-  # although it is not a secure way to store our passwords,
-  # but as a suite of tools for private use it is an acceptable security risk.
-  # https://stackoverflow.com/questions/33469770/security-of-sshpass
-  apt-get install -y --no-install-recommends python3 python3-pip python3-wheel python3-apt sshpass
-  python3 -m pip install --upgrade pip
-  python3 -m pip install setuptools
-  delete_pip_package_if_exists "ansible"
-  delete_pip_package_if_exists "absible-base"
-
-  #install ansible    
-  python3 -m pip install ansible Jinja2
+install_with_apt() {
+  run_privileged apt-get update
+  run_privileged apt-get install -y --no-install-recommends \
+    ca-certificates python3 python3-pip python3-venv sshpass
+  PYTHON_BIN="$(command -v python3)"
 }
 
-function install_ansible_depend {
-  ansible-galaxy install -r ansible/galaxy_requirements.yaml
+install_with_dnf() {
+  run_privileged dnf install -y \
+    ca-certificates python3 python3-pip sshpass
+  PYTHON_BIN="$(command -v python3)"
 }
 
-if [ ! -x /usr/bin/sudo ]; then
-  apt-get update
-  apt-get install -y --no-install_recommends sudo
+install_with_brew() {
+  if [[ ${EUID} -eq 0 ]]; then
+    echo "Homebrew installation must not run as root"
+    exit 1
+  fi
+
+  brew install python@3.12
+  if ! command -v sshpass >/dev/null 2>&1; then
+    brew install sshpass
+  fi
+  PYTHON_BIN="$(brew --prefix python@3.12)/bin/python3.12"
+}
+
+if command -v apt-get >/dev/null 2>&1; then
+  install_with_apt
+elif command -v dnf >/dev/null 2>&1; then
+  install_with_dnf
+elif command -v brew >/dev/null 2>&1; then
+  install_with_brew
+else
+  echo "Unsupported package manager: install apt-get, dnf, or Homebrew"
+  exit 1
 fi
 
-if [ ! -x /usr/local/bin/ansible ]; then
-  install_ansible
+readonly PYTHON_MINOR="$("${PYTHON_BIN}" -c 'import sys; print(sys.version_info.minor)')"
+case "${PYTHON_MINOR}" in
+  10)
+    readonly ANSIBLE_VERSION="2.16.19"
+    ;;
+  11)
+    readonly ANSIBLE_VERSION="2.18.18"
+    ;;
+  12|13|14)
+    readonly ANSIBLE_VERSION="2.21.3"
+    ;;
+  *)
+    echo "Unsupported Python version: $("${PYTHON_BIN}" --version 2>&1)"
+    echo "Python 3.10 through 3.14 is required"
+    exit 2
+    ;;
+esac
+
+mkdir -p "${ANSIBLE_HOME}" "${USER_BIN_DIR}"
+
+if [[ ! -x "${ANSIBLE_VENV}/bin/ansible" ]] || \
+   ! "${ANSIBLE_VENV}/bin/python" -c \
+     'import importlib.metadata, sys; sys.exit(importlib.metadata.version("ansible-core") != sys.argv[1])' \
+     "${ANSIBLE_VERSION}"; then
+  "${PYTHON_BIN}" -m venv --clear "${ANSIBLE_VENV}"
+  "${ANSIBLE_VENV}/bin/pip" install --upgrade pip
+  "${ANSIBLE_VENV}/bin/pip" install "ansible-core==${ANSIBLE_VERSION}"
 fi
 
-if [ $(ansible --version | head -1 | grep -Eo "[0-9]+\.[0-9]+\.[0-9]+") != "${ansible_version}" ]; then
-  install_ansible
-fi
+"${ANSIBLE_VENV}/bin/ansible-galaxy" collection install \
+  --requirements-file "${SCRIPT_DIR}/ansible/galaxy_requirements.yaml"
 
-install_ansible_depend
+for executable in ansible ansible-config ansible-galaxy ansible-inventory ansible-playbook; do
+  ln -sfn "${ANSIBLE_VENV}/bin/${executable}" "${USER_BIN_DIR}/${executable}"
+done
+
+echo "Installed ansible-core ${ANSIBLE_VERSION} using $("${PYTHON_BIN}" --version 2>&1)"
+echo "Ansible commands are available in ${USER_BIN_DIR}"
+if [[ ":${PATH}:" != *":${USER_BIN_DIR}:"* ]]; then
+  echo "Add ${USER_BIN_DIR} to PATH before running Ansible"
+fi

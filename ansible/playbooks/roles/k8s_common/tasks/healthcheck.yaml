@@ -1,0 +1,328 @@
+---
+- name: Read node versions
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - get
+      - nodes
+      - -o
+      - json
+  register: k8s_post_nodes
+  until: >-
+    k8s_expected_version | length == 0 or
+    ((k8s_post_nodes.stdout | from_json)['items']
+    | map(attribute='status.nodeInfo.kubeletVersion')
+    | reject('equalto', k8s_expected_version) | list | length) == 0
+  retries: 30
+  delay: 10
+  changed_when: false
+
+- name: Validate all node readiness
+  ansible.builtin.assert:
+    that:
+      - >-
+        (item.status.conditions
+        | selectattr('type', 'equalto', 'Ready')
+        | map(attribute='status') | first) == 'True'
+      - item.spec.unschedulable is not defined or not item.spec.unschedulable
+    fail_msg: Node {{ item.metadata.name }} is not Ready or remains cordoned.
+  loop: "{{ (k8s_post_nodes.stdout | from_json)['items'] }}"
+  loop_control:
+    label: "{{ item.metadata.name }}"
+
+- name: Read and validate API server version
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - version
+      - -o
+      - json
+  register: k8s_post_version
+  changed_when: false
+  failed_when: >-
+    k8s_expected_version | length > 0 and
+    (k8s_post_version.stdout | from_json).serverVersion.gitVersion != k8s_expected_version
+
+- name: Record API server major and minor version
+  ansible.builtin.set_fact:
+    k8s_api_major_minor: >-
+      {{ ((k8s_post_version.stdout | from_json).serverVersion.gitVersion
+      | regex_replace('^v', '')).split('.')[0:2] | join('.') }}
+
+- name: Require kubelet and API server minor versions to match
+  ansible.builtin.assert:
+    that:
+      - >-
+        ((item.status.nodeInfo.kubeletVersion | regex_replace('^v', '')).split('.')[0:2]
+        | join('.')) == k8s_api_major_minor
+    fail_msg: >-
+      Node {{ item.metadata.name }} kubelet {{ item.status.nodeInfo.kubeletVersion }}
+      does not match API server minor {{ k8s_api_major_minor }}.
+  loop: "{{ (k8s_post_nodes.stdout | from_json)['items'] }}"
+  loop_control:
+    label: "{{ item.metadata.name }}"
+  when: k8s_require_same_minor | bool
+
+- name: Wait for Calico
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - --namespace
+      - kube-system
+      - rollout
+      - status
+      - daemonset/calico-node
+      - --timeout=10m
+  changed_when: false
+
+- name: Wait for kube-proxy
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - --namespace
+      - kube-system
+      - rollout
+      - status
+      - daemonset/kube-proxy
+      - --timeout=10m
+  changed_when: false
+
+- name: Read daemon set recovery state
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - get
+      - daemonsets
+      - --all-namespaces
+      - -o
+      - json
+  register: k8s_post_daemonsets
+  changed_when: false
+
+- name: Require all daemon sets to be ready
+  ansible.builtin.assert:
+    that:
+      - (item.status.numberReady | default(0) | int) == (item.status.desiredNumberScheduled | default(0) | int)
+    fail_msg: >-
+      DaemonSet {{ item.metadata.namespace }}/{{ item.metadata.name }} has
+      {{ item.status.numberReady | default(0) }} of
+      {{ item.status.desiredNumberScheduled | default(0) }} pods ready.
+  loop: "{{ (k8s_post_daemonsets.stdout | from_json)['items'] }}"
+  loop_control:
+    label: "{{ item.metadata.namespace }}/{{ item.metadata.name }}"
+
+- name: Wait for CoreDNS
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - --namespace
+      - kube-system
+      - rollout
+      - status
+      - deployment/coredns
+      - --timeout=10m
+  changed_when: false
+
+- name: Wait for ingress-nginx
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - --namespace
+      - ingress-nginx
+      - rollout
+      - status
+      - deployment/ingress-nginx-controller
+      - --timeout=10m
+  changed_when: false
+
+- name: Read cert-manager ClusterIssuers
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - get
+      - clusterissuers
+      - -o
+      - name
+  register: k8s_clusterissuers
+  changed_when: false
+
+- name: Validate cert-manager ClusterIssuers
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - wait
+      - clusterissuers
+      - --all
+      - --for=condition=Ready
+      - --timeout=5m
+  changed_when: false
+  when: k8s_clusterissuers.stdout | trim | length > 0
+
+- name: Read cert-manager Certificates
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - get
+      - certificates
+      - --all-namespaces
+      - -o
+      - name
+  register: k8s_certificates
+  changed_when: false
+
+- name: Validate cert-manager Certificates
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - wait
+      - certificates
+      - --all
+      - --all-namespaces
+      - --for=condition=Ready
+      - --timeout=5m
+  changed_when: false
+  when: k8s_certificates.stdout | trim | length > 0
+
+- name: Read persistent storage state
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - get
+      - persistentvolumes,persistentvolumeclaims
+      - --all-namespaces
+      - -o
+      - json
+  register: k8s_post_storage
+  changed_when: false
+
+- name: Require healthy persistent storage bindings
+  ansible.builtin.assert:
+    that:
+      - item.status.phase in ['Bound', 'Available']
+    fail_msg: >-
+      {{ item.kind }}/{{ item.metadata.namespace | default('cluster') }}/{{ item.metadata.name }}
+      is {{ item.status.phase | default('Unknown') }}.
+  loop: "{{ (k8s_post_storage.stdout | from_json)['items'] }}"
+  loop_control:
+    label: "{{ item.kind }}/{{ item.metadata.name }}"
+
+- name: Wait for workload pods to recover
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - get
+      - pods
+      - --all-namespaces
+      - --field-selector=status.phase!=Running,status.phase!=Succeeded
+      - -o
+      - name
+  register: k8s_post_unhealthy_pods
+  until: k8s_post_unhealthy_pods.stdout | trim | length == 0
+  retries: 90
+  delay: 10
+  changed_when: false
+
+- name: Wait for running pods to become ready
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - wait
+      - pods
+      - --all
+      - --all-namespaces
+      - --field-selector=status.phase=Running
+      - --for=condition=Ready
+      - --timeout=15m
+  changed_when: false
+
+- name: Read deployment recovery state
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - get
+      - deployments
+      - --all-namespaces
+      - -o
+      - json
+  register: k8s_post_deployments
+  changed_when: false
+
+- name: Require all deployments to be available
+  ansible.builtin.assert:
+    that:
+      - (item.status.availableReplicas | default(0) | int) == (item.spec.replicas | default(1) | int)
+    fail_msg: >-
+      Deployment {{ item.metadata.namespace }}/{{ item.metadata.name }} has
+      {{ item.status.availableReplicas | default(0) }} of
+      {{ item.spec.replicas | default(1) }} replicas available.
+  loop: "{{ (k8s_post_deployments.stdout | from_json)['items'] }}"
+  loop_control:
+    label: "{{ item.metadata.namespace }}/{{ item.metadata.name }}"
+
+- name: Read StatefulSet recovery state
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - get
+      - statefulsets
+      - --all-namespaces
+      - -o
+      - json
+  register: k8s_post_statefulsets
+  changed_when: false
+
+- name: Require all StatefulSets to be ready
+  ansible.builtin.assert:
+    that:
+      - (item.status.readyReplicas | default(0) | int) == (item.spec.replicas | default(1) | int)
+    fail_msg: >-
+      StatefulSet {{ item.metadata.namespace }}/{{ item.metadata.name }} has
+      {{ item.status.readyReplicas | default(0) }} of
+      {{ item.spec.replicas | default(1) }} replicas ready.
+  loop: "{{ (k8s_post_statefulsets.stdout | from_json)['items'] }}"
+  loop_control:
+    label: "{{ item.metadata.namespace }}/{{ item.metadata.name }}"
+
+- name: Check API readiness
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - get
+      - --raw=/readyz
+  register: k8s_post_readyz
+  changed_when: false
+  failed_when: k8s_post_readyz.stdout | trim != 'ok'

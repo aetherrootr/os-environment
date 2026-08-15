@@ -1,0 +1,63 @@
+---
+- name: Remove completed ingress admission jobs
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - --namespace
+      - ingress-nginx
+      - delete
+      - job
+      - ingress-nginx-admission-create
+      - ingress-nginx-admission-patch
+      - --ignore-not-found=true
+  when:
+    - k8s_ingress_nginx_version | length > 0
+    - k8s_ingress_cleanup_admission_jobs | bool
+
+- name: Apply ingress-nginx manifest
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - apply
+      - -f
+      - "https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-{{ k8s_ingress_nginx_version }}/deploy/static/provider/baremetal/deploy.yaml"
+  when: k8s_ingress_nginx_version | length > 0
+
+- name: Render ingress-nginx controller service
+  ansible.builtin.template:
+    src: ingress-nginx-controller.yaml.j2
+    dest: /tmp/ingress-nginx-controller.yaml
+    owner: root
+    group: root
+    mode: "0600"
+  when: k8s_ingress_nginx_version | length > 0
+
+- name: Configure ingress-nginx controller service
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - apply
+      - -f
+      - /tmp/ingress-nginx-controller.yaml
+  when: k8s_ingress_nginx_version | length > 0
+
+- name: Wait for ingress-nginx controller
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - --namespace
+      - ingress-nginx
+      - rollout
+      - status
+      - deployment/ingress-nginx-controller
+      - --timeout=10m
+  changed_when: false
+  when: k8s_ingress_nginx_version | length > 0

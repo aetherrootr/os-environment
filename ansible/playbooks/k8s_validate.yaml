@@ -1,0 +1,20 @@
+---
+- name: Validate a completed Kubernetes upgrade
+  hosts: k8s-master
+  become: true
+  become_user: root
+  any_errors_fatal: true
+  tasks:
+    - name: Require target version
+      ansible.builtin.assert:
+        that:
+          - k8s_target_version is defined
+          - k8s_target_version is match('^v1\.[0-9]+\.[0-9]+$')
+        fail_msg: Pass the validated version with -e k8s_target_version=vX.Y.Z.
+
+    - name: Run cluster validation
+      ansible.builtin.import_role:
+        name: k8s_common
+        tasks_from: healthcheck
+      vars:
+        k8s_expected_version: "{{ k8s_target_version }}"

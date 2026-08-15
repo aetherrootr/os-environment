@@ -1,0 +1,6 @@
+---
+- ansible.builtin.import_playbook: k8s_upgrade_step.yaml
+  vars:
+    k8s_previous_version: v1.30.14
+    k8s_target_version: v1.31.14
+    k8s_post_cert_manager_version: v1.19.6

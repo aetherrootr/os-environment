@@ -7,15 +7,14 @@
   with_items:
     - /etc/kubernetes
 
-- name: Copy kubeadm-config.yaml
-  copy:
-    src: "{{ role_path }}/files/kubeadm-config-for-master.yaml"
+- name: Render kubeadm-config.yaml
+  ansible.builtin.template:
+    src: kubeadm-config-for-master.yaml.j2
     dest: "/etc/kubernetes/kubeadm-config.yaml"
-    mode: 0644
+    mode: "0644"
 
 - name: Cleanup node
   command: kubeadm reset -f
 
 - name: Initialize k8s master
   command: kubeadm init --config=/etc/kubernetes/kubeadm-config.yaml --upload-certs
-

@@ -1,0 +1,40 @@
+---
+- name: Create node upgrade backup directory
+  ansible.builtin.file:
+    path: "{{ k8s_backup_root }}/{{ k8s_target_version }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Check for existing node configuration archive
+  ansible.builtin.stat:
+    path: "{{ k8s_backup_root }}/{{ k8s_target_version }}/node-config.tgz"
+  register: k8s_node_archive
+
+- name: Archive node configuration
+  community.general.archive:
+    path:
+      - /var/lib/kubelet/config.yaml
+      - /etc/containerd/config.toml
+      - /etc/apt/sources.list.d/kubernetes.list
+    dest: "{{ k8s_backup_root }}/{{ k8s_target_version }}/node-config.tgz"
+    format: gz
+    owner: root
+    group: root
+    mode: "0600"
+  when: not k8s_node_archive.stat.exists
+
+- name: Create local node backup destination
+  ansible.builtin.file:
+    path: "{{ k8s_local_backup_root }}/{{ inventory_hostname }}/{{ k8s_target_version }}"
+    state: directory
+    mode: "0700"
+  delegate_to: localhost
+  become: false
+
+- name: Fetch worker configuration archive
+  ansible.builtin.fetch:
+    src: "{{ k8s_backup_root }}/{{ k8s_target_version }}/node-config.tgz"
+    dest: "{{ k8s_local_backup_root }}/{{ inventory_hostname }}/{{ k8s_target_version }}/node-config.tgz"
+    flat: true

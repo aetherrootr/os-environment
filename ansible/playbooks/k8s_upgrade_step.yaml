@@ -1,0 +1,86 @@
+---
+- name: Check every Kubernetes node
+  hosts: kubernetes
+  become: true
+  become_user: root
+  any_errors_fatal: true
+  tasks:
+    - name: Run node preflight
+      ansible.builtin.import_role:
+        name: k8s_upgrade
+        tasks_from: preflight_node
+
+- name: Preflight and compatibility add-ons
+  hosts: k8s-master
+  become: true
+  become_user: root
+  any_errors_fatal: true
+  tasks:
+    - name: Run upgrade preflight
+      ansible.builtin.import_role:
+        name: k8s_upgrade
+        tasks_from: preflight
+
+    - name: Back up control-plane state
+      ansible.builtin.import_role:
+        name: k8s_upgrade
+        tasks_from: backup
+
+    - name: Upgrade compatibility add-ons
+      ansible.builtin.import_role:
+        name: k8s_common
+        tasks_from: addons
+      vars:
+        k8s_calico_version: "{{ k8s_pre_calico_version | default('') }}"
+        k8s_cert_manager_version: "{{ k8s_pre_cert_manager_version | default('') }}"
+        k8s_ingress_nginx_version: "{{ k8s_pre_ingress_nginx_version | default('') }}"
+        k8s_cert_rotation_guard: true
+        k8s_ingress_cleanup_admission_jobs: true
+
+- name: Upgrade control plane
+  hosts: k8s-master
+  become: true
+  become_user: root
+  any_errors_fatal: true
+  tasks:
+    - name: Upgrade control-plane components
+      ansible.builtin.import_role:
+        name: k8s_upgrade
+        tasks_from: control_plane
+
+- name: Upgrade workers one at a time
+  hosts: k8s-node
+  serial: 1
+  become: true
+  become_user: root
+  any_errors_fatal: true
+  max_fail_percentage: 0
+  tasks:
+    - name: Upgrade worker components
+      ansible.builtin.import_role:
+        name: k8s_upgrade
+        tasks_from: worker
+
+- name: Validate upgraded cluster
+  hosts: k8s-master
+  become: true
+  become_user: root
+  any_errors_fatal: true
+  tasks:
+    - name: Upgrade add-ons requiring the target Kubernetes version
+      ansible.builtin.import_role:
+        name: k8s_common
+        tasks_from: addons
+      vars:
+        k8s_calico_version: "{{ k8s_post_calico_version | default('') }}"
+        k8s_cert_manager_version: "{{ k8s_post_cert_manager_version | default('') }}"
+        k8s_ingress_nginx_version: "{{ k8s_post_ingress_nginx_version | default('') }}"
+        k8s_cert_rotation_guard: true
+        k8s_ingress_cleanup_admission_jobs: true
+
+    - name: Run post-upgrade validation
+      ansible.builtin.import_role:
+        name: k8s_common
+        tasks_from: healthcheck
+      vars:
+        k8s_expected_version: "{{ k8s_target_version }}"

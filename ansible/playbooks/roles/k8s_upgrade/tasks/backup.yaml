@@ -1,0 +1,231 @@
+---
+- name: Create upgrade backup directory
+  ansible.builtin.file:
+    path: "{{ k8s_backup_root }}/{{ k8s_target_version }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Check etcd endpoint health
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - --namespace
+      - kube-system
+      - exec
+      - "etcd-{{ ansible_hostname }}"
+      - --
+      - etcdctl
+      - --endpoints=https://127.0.0.1:2379
+      - --cacert=/etc/kubernetes/pki/etcd/ca.crt
+      - --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt
+      - --key=/etc/kubernetes/pki/etcd/healthcheck-client.key
+      - endpoint
+      - health
+  changed_when: false
+
+- name: Check for completed etcd snapshot
+  ansible.builtin.stat:
+    path: "/var/lib/etcd/pre-{{ k8s_target_version }}.db"
+  register: k8s_etcd_snapshot
+
+- name: Validate existing etcd snapshot
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - --namespace
+      - kube-system
+      - exec
+      - "etcd-{{ ansible_hostname }}"
+      - --
+      - etcdctl
+      - snapshot
+      - status
+      - "/var/lib/etcd/pre-{{ k8s_target_version }}.db"
+      - --write-out=table
+  register: k8s_existing_snapshot_check
+  changed_when: false
+  failed_when: false
+  when: k8s_etcd_snapshot.stat.exists
+
+- name: Record existing snapshot validity
+  ansible.builtin.set_fact:
+    k8s_etcd_snapshot_valid: >-
+      {{ k8s_etcd_snapshot.stat.exists and
+      (k8s_existing_snapshot_check.rc | default(1) | int == 0) }}
+
+- name: Refuse to replace an invalid snapshot after control-plane mutation
+  ansible.builtin.assert:
+    that:
+      - >-
+        k8s_etcd_snapshot_valid or
+        k8s_current_server_version != k8s_target_version
+    fail_msg: >-
+      The saved pre-upgrade snapshot is invalid, but the API server already
+      reports {{ k8s_target_version }}. Restore a known-good backup or explicitly
+      resolve the snapshot before rerunning; a new snapshot would not represent
+      the source version.
+
+- name: Remove invalid committed snapshot while still on source version
+  ansible.builtin.file:
+    path: "/var/lib/etcd/pre-{{ k8s_target_version }}.db"
+    state: absent
+  when:
+    - not k8s_etcd_snapshot_valid
+    - k8s_current_server_version != k8s_target_version
+
+- name: Remove an interrupted temporary etcd snapshot
+  ansible.builtin.file:
+    path: "/var/lib/etcd/.pre-{{ k8s_target_version }}.db.tmp"
+    state: absent
+  when: not k8s_etcd_snapshot_valid
+
+- name: Save temporary etcd snapshot
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - --namespace
+      - kube-system
+      - exec
+      - "etcd-{{ ansible_hostname }}"
+      - --
+      - etcdctl
+      - --endpoints=https://127.0.0.1:2379
+      - --cacert=/etc/kubernetes/pki/etcd/ca.crt
+      - --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt
+      - --key=/etc/kubernetes/pki/etcd/healthcheck-client.key
+      - snapshot
+      - save
+      - "/var/lib/etcd/.pre-{{ k8s_target_version }}.db.tmp"
+  when: not k8s_etcd_snapshot_valid
+
+- name: Verify temporary etcd snapshot
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - --namespace
+      - kube-system
+      - exec
+      - "etcd-{{ ansible_hostname }}"
+      - --
+      - etcdctl
+      - snapshot
+      - status
+      - "/var/lib/etcd/.pre-{{ k8s_target_version }}.db.tmp"
+      - --write-out=table
+  changed_when: false
+  when: not k8s_etcd_snapshot_valid
+
+- name: Commit verified etcd snapshot
+  ansible.builtin.command:
+    argv:
+      - mv
+      - "/var/lib/etcd/.pre-{{ k8s_target_version }}.db.tmp"
+      - "/var/lib/etcd/pre-{{ k8s_target_version }}.db"
+  when: not k8s_etcd_snapshot_valid
+
+- name: Verify etcd snapshot
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - --namespace
+      - kube-system
+      - exec
+      - "etcd-{{ ansible_hostname }}"
+      - --
+      - etcdctl
+      - snapshot
+      - status
+      - "/var/lib/etcd/pre-{{ k8s_target_version }}.db"
+      - --write-out=table
+  register: k8s_etcd_snapshot_status
+  changed_when: false
+
+- name: Check for existing control-plane configuration archive
+  ansible.builtin.stat:
+    path: "{{ k8s_backup_root }}/{{ k8s_target_version }}/node-config.tgz"
+  register: k8s_control_plane_archive
+
+- name: Archive Kubernetes and runtime configuration
+  community.general.archive:
+    path:
+      - /etc/kubernetes
+      - /var/lib/kubelet/config.yaml
+      - /etc/containerd/config.toml
+      - /etc/apt/sources.list.d/kubernetes.list
+    dest: "{{ k8s_backup_root }}/{{ k8s_target_version }}/node-config.tgz"
+    format: gz
+    owner: root
+    group: root
+    mode: "0600"
+  when: not k8s_control_plane_archive.stat.exists
+
+- name: Save package versions
+  ansible.builtin.command:
+    argv:
+      - dpkg-query
+      - -W
+      - "-f=${Package} ${Version}\n"
+      - kubeadm
+      - kubelet
+      - kubectl
+      - containerd.io
+  register: k8s_package_versions
+  changed_when: false
+
+- name: Write backup metadata
+  ansible.builtin.copy:
+    dest: "{{ k8s_backup_root }}/{{ k8s_target_version }}/metadata.txt"
+    owner: root
+    group: root
+    mode: "0600"
+    content: |
+      Target: {{ k8s_target_version }}
+      Source API server: {{ k8s_current_server_version }}
+      Created: {{ ansible_date_time.iso8601 }}
+
+      Packages:
+      {{ k8s_package_versions.stdout }}
+
+      Certificates:
+      {{ k8s_certificate_expiration.stdout }}
+
+      etcd snapshot status:
+      {{ k8s_etcd_snapshot_status.stdout }}
+
+- name: Create local backup destination
+  ansible.builtin.file:
+    path: "{{ k8s_local_backup_root }}/{{ inventory_hostname }}/{{ k8s_target_version }}"
+    state: directory
+    mode: "0700"
+  delegate_to: localhost
+  become: false
+
+- name: Fetch etcd snapshot to Ansible controller
+  ansible.builtin.fetch:
+    src: "/var/lib/etcd/pre-{{ k8s_target_version }}.db"
+    dest: "{{ k8s_local_backup_root }}/{{ inventory_hostname }}/{{ k8s_target_version }}/etcd.db"
+    flat: true
+
+- name: Fetch node configuration archive
+  ansible.builtin.fetch:
+    src: "{{ k8s_backup_root }}/{{ k8s_target_version }}/node-config.tgz"
+    dest: "{{ k8s_local_backup_root }}/{{ inventory_hostname }}/{{ k8s_target_version }}/node-config.tgz"
+    flat: true
+
+- name: Fetch backup metadata
+  ansible.builtin.fetch:
+    src: "{{ k8s_backup_root }}/{{ k8s_target_version }}/metadata.txt"
+    dest: "{{ k8s_local_backup_root }}/{{ inventory_hostname }}/{{ k8s_target_version }}/metadata.txt"
+    flat: true

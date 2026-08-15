@@ -1,0 +1,46 @@
+---
+- name: Validate Kubernetes package selection
+  ansible.builtin.assert:
+    that:
+      - k8s_package_version is defined
+      - k8s_package_names | length > 0
+    fail_msg: k8s_package_version and k8s_package_names are required.
+
+- name: Install and re-hold Kubernetes packages
+  block:
+    - name: Unhold Kubernetes packages
+      ansible.builtin.dpkg_selections:
+        name: "{{ item }}"
+        selection: install
+      loop: "{{ k8s_package_names }}"
+
+    - name: Install exact Kubernetes packages
+      ansible.builtin.apt:
+        name: >-
+          {{ k8s_package_names
+          | map('regex_replace', '$', '=' + (k8s_package_version | regex_replace('^v', '')) + k8s_package_revision)
+          | list }}
+        state: present
+        update_cache: false
+        allow_downgrade: false
+        install_recommends: false
+
+    - name: Verify installed Kubernetes package versions
+      ansible.builtin.command:
+        argv:
+          - dpkg-query
+          - -W
+          - "-f=${Version}"
+          - "{{ item }}"
+      loop: "{{ k8s_package_names }}"
+      register: k8s_installed_packages
+      changed_when: false
+      failed_when: >-
+        k8s_installed_packages.stdout !=
+        (k8s_package_version | regex_replace('^v', '')) + k8s_package_revision
+  always:
+    - name: Hold Kubernetes packages
+      ansible.builtin.dpkg_selections:
+        name: "{{ item }}"
+        selection: hold
+      loop: "{{ k8s_package_names }}"

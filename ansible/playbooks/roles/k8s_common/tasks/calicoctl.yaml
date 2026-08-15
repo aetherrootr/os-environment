@@ -1,0 +1,28 @@
+---
+- name: Create calicoctl version directory
+  ansible.builtin.file:
+    path: "/usr/local/lib/calicoctl_{{ k8s_calico_version }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: k8s_calico_version | length > 0
+
+- name: Install matching calicoctl
+  ansible.builtin.get_url:
+    url: >-
+      https://github.com/projectcalico/calico/releases/download/{{ k8s_calico_version }}/calicoctl-linux-amd64
+    dest: "/usr/local/lib/calicoctl_{{ k8s_calico_version }}/calicoctl"
+    owner: root
+    group: root
+    mode: "0755"
+    force: true
+  when: k8s_calico_version | length > 0
+
+- name: Select matching calicoctl
+  ansible.builtin.file:
+    path: /usr/local/bin/calicoctl
+    src: "/usr/local/lib/calicoctl_{{ k8s_calico_version }}/calicoctl"
+    state: link
+    force: true
+  when: k8s_calico_version | length > 0

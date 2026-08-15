@@ -1,3 +1,7 @@
 ---
-- name: Install calico
-  command: "kubectl apply -f {{ calico_config_yaml_url }}"
+- name: Install Calico
+  ansible.builtin.include_role:
+    name: k8s_common
+    tasks_from: calico
+  vars:
+    k8s_calico_version: "{{ calico_version }}"

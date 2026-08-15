@@ -1,0 +1,11 @@
+---
+- name: Validate Kubernetes cluster health
+  hosts: k8s-master
+  become: true
+  become_user: root
+  any_errors_fatal: true
+  tasks:
+    - name: Run Kubernetes health checks
+      ansible.builtin.import_role:
+        name: k8s_common
+        tasks_from: healthcheck

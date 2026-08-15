@@ -1,0 +1,175 @@
+---
+- name: Validate upgrade acknowledgement
+  ansible.builtin.assert:
+    that:
+      - k8s_upgrade_confirm | bool
+      - k8s_data_backup_confirmed | bool
+      - k8s_previous_version is defined
+      - k8s_target_version is defined
+      - k8s_previous_version is match('^v1\.[0-9]+\.[0-9]+$')
+      - k8s_target_version is match('^v1\.[0-9]+\.[0-9]+$')
+      - (k8s_target_version.split('.')[0] | regex_replace('^v', '') | int) == (k8s_previous_version.split('.')[0] | regex_replace('^v', '') | int)
+      - (k8s_target_version.split('.')[1] | int) in [(k8s_previous_version.split('.')[1] | int), (k8s_previous_version.split('.')[1] | int) + 1]
+      - >-
+        (k8s_target_version.split('.')[1] | int) > (k8s_previous_version.split('.')[1] | int)
+        or
+        (k8s_target_version.split('.')[2] | int) > (k8s_previous_version.split('.')[2] | int)
+    fail_msg: >-
+      Refusing to upgrade. Pass both -e k8s_upgrade_confirm=true and
+      -e k8s_data_backup_confirmed=true after confirming the maintenance
+      window and application-data backups.
+
+- name: Read Kubernetes server version
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - version
+      - -o
+      - json
+  register: k8s_version_result
+  changed_when: false
+
+- name: Record current Kubernetes server version
+  ansible.builtin.set_fact:
+    k8s_current_server_version: >-
+      {{ (k8s_version_result.stdout | from_json).serverVersion.gitVersion }}
+
+- name: Require the expected Kubernetes server version
+  ansible.builtin.assert:
+    that:
+      - k8s_current_server_version in [k8s_previous_version, k8s_target_version]
+    fail_msg: >-
+      API server is {{ k8s_current_server_version }}, but this step only accepts
+      {{ k8s_previous_version }} or a partially completed {{ k8s_target_version }}.
+
+- name: Read node state
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - get
+      - nodes
+      - -o
+      - json
+  register: k8s_nodes_result
+  changed_when: false
+
+- name: Validate node versions and readiness
+  ansible.builtin.assert:
+    that:
+      - item.status.nodeInfo.kubeletVersion in [k8s_previous_version, k8s_target_version]
+      - >-
+        (item.status.conditions
+        | selectattr('type', 'equalto', 'Ready')
+        | map(attribute='status') | first) == 'True'
+    fail_msg: >-
+      Node {{ item.metadata.name }} is not Ready or has an unexpected kubelet
+      version {{ item.status.nodeInfo.kubeletVersion }}.
+  loop: "{{ (k8s_nodes_result.stdout | from_json)['items'] }}"
+  loop_control:
+    label: "{{ item.metadata.name }}"
+
+- name: Check API readiness
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - get
+      - --raw=/readyz
+  register: k8s_readyz
+  changed_when: false
+  failed_when: k8s_readyz.stdout | trim != 'ok'
+
+- name: Check for unhealthy pods
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - get
+      - pods
+      - --all-namespaces
+      - --field-selector=status.phase!=Running,status.phase!=Succeeded
+      - -o
+      - name
+  register: k8s_unhealthy_pods
+  changed_when: false
+  failed_when: k8s_unhealthy_pods.stdout | trim | length > 0
+
+- name: Check control-plane certificate expiration
+  ansible.builtin.command:
+    argv:
+      - kubeadm
+      - certs
+      - check-expiration
+  register: k8s_certificate_expiration
+  changed_when: false
+
+- name: Enumerate listable API resources for Calico OwnerReference audit
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - api-resources
+      - --verbs=list
+      - -o
+      - name
+  register: k8s_listable_api_resources
+  changed_when: false
+  when: k8s_pre_calico_version | default('') == 'v3.29.7'
+
+- name: Read every API resource for Calico OwnerReference audit
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - get
+      - "{{ item }}"
+      - --all-namespaces
+      - -o
+      - json
+  loop: "{{ k8s_listable_api_resources.stdout_lines | default([]) }}"
+  register: k8s_all_api_resource_results
+  changed_when: false
+  no_log: true
+  when: k8s_pre_calico_version | default('') == 'v3.29.7'
+
+- name: Require complete Calico OwnerReference resource audit
+  ansible.builtin.assert:
+    that:
+      - item.rc == 0
+    fail_msg: The OwnerReference audit could not list one or more API resources.
+  loop: "{{ k8s_all_api_resource_results.results | default([]) }}"
+  loop_control:
+    label: "{{ item.item | default('unknown') }}"
+  no_log: true
+  when: k8s_pre_calico_version | default('') == 'v3.29.7'
+
+- name: Initialize Calico OwnerReference violations
+  ansible.builtin.set_fact:
+    k8s_calico_ownerref_violations: []
+  when: k8s_pre_calico_version | default('') == 'v3.29.7'
+
+- name: Inspect Calico OwnerReferences
+  ansible.builtin.include_tasks: check_calico_ownerrefs.yaml
+  loop: "{{ k8s_all_api_resource_results.results | default([]) }}"
+  loop_control:
+    loop_var: k8s_resource_result
+    label: "{{ k8s_resource_result.item }}"
+  when: k8s_pre_calico_version | default('') == 'v3.29.7'
+
+- name: Block unsafe Calico v3.27 to v3.29 OwnerReference migration
+  ansible.builtin.assert:
+    that:
+      - k8s_calico_ownerref_violations | length == 0
+    fail_msg: >-
+      Remove and record these projectcalico.org/v3 OwnerReferences before
+      crossing Calico v3.28, then restore them with new owner UIDs:
+      {{ k8s_calico_ownerref_violations | join(', ') }}
+  when: k8s_pre_calico_version | default('') == 'v3.29.7'

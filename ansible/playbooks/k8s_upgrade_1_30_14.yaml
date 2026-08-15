@@ -1,0 +1,5 @@
+---
+- ansible.builtin.import_playbook: k8s_upgrade_step.yaml
+  vars:
+    k8s_previous_version: v1.29.15
+    k8s_target_version: v1.30.14

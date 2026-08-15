@@ -9,6 +9,9 @@ My machine is the Intel NUC 11 Performance Kit - NUC11PAHi5 (unfortunately it's 
 
 It is very easy to build a cluster using ansible scripts, just deploy the k8s-master node first and then the k8s-slave node.
 
+New clusters are pinned to Kubernetes v1.35.7, Calico v3.32.1,
+ingress-nginx v1.15.1, and cert-manager v1.21.1.
+
 ## k8s master
 
 Run the command to deploy k8s master node:

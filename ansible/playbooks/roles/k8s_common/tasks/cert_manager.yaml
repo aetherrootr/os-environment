@@ -1,0 +1,44 @@
+---
+- name: Require cert-manager private-key rotation review
+  ansible.builtin.assert:
+    that:
+      - k8s_cert_rotation_policy_confirmed | bool
+    fail_msg: >-
+      cert-manager v1.18 changes the default privateKey.rotationPolicy to
+      Always. Review Certificates that omit this field, set the intended policy,
+      and pass -e k8s_cert_rotation_policy_confirmed=true.
+  when:
+    - k8s_cert_rotation_guard | bool
+    - k8s_cert_manager_version is match('^v1\.18\.')
+
+- name: Apply cert-manager manifest
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - apply
+      - --server-side
+      - --force-conflicts
+      - -f
+      - "https://github.com/cert-manager/cert-manager/releases/download/{{ k8s_cert_manager_version }}/cert-manager.yaml"
+  when: k8s_cert_manager_version | length > 0
+
+- name: Wait for cert-manager deployments
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - --namespace
+      - cert-manager
+      - rollout
+      - status
+      - "deployment/{{ item }}"
+      - --timeout=10m
+  loop:
+    - cert-manager
+    - cert-manager-cainjector
+    - cert-manager-webhook
+  changed_when: false
+  when: k8s_cert_manager_version | length > 0

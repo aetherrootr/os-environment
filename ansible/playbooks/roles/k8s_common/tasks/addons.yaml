@@ -1,0 +1,12 @@
+---
+- name: Manage Calico
+  ansible.builtin.import_tasks: calico.yaml
+
+- name: Manage calicoctl
+  ansible.builtin.import_tasks: calicoctl.yaml
+
+- name: Manage cert-manager
+  ansible.builtin.import_tasks: cert_manager.yaml
+
+- name: Manage ingress-nginx
+  ansible.builtin.import_tasks: ingress.yaml

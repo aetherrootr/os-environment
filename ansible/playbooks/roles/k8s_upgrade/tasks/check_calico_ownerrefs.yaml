@@ -1,0 +1,12 @@
+---
+- name: Record Calico v3 OwnerReferences
+  ansible.builtin.set_fact:
+    k8s_calico_ownerref_violations: >-
+      {{ k8s_calico_ownerref_violations +
+      [item.kind + '/' + (item.metadata.namespace | default('cluster')) + '/' + item.metadata.name] }}
+  loop: "{{ (k8s_resource_result.stdout | from_json)['items'] }}"
+  no_log: true
+  when: >-
+    (item.metadata.ownerReferences | default([])
+    | selectattr('apiVersion', 'equalto', 'projectcalico.org/v3')
+    | list | length) > 0

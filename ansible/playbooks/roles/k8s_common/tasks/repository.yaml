@@ -1,0 +1,63 @@
+---
+- name: Validate Kubernetes package version
+  ansible.builtin.assert:
+    that:
+      - k8s_package_version is defined
+      - k8s_package_version is match('^v1\.[0-9]+\.[0-9]+$')
+    fail_msg: k8s_package_version must be an exact version such as v1.35.7.
+
+- name: Install Kubernetes repository dependencies
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+    state: present
+    install_recommends: false
+
+- name: Create apt keyring directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install Kubernetes repository signing key
+  ansible.builtin.get_url:
+    url: >-
+      https://pkgs.k8s.io/core:/stable:/v{{ k8s_package_version.split('.')[0] | regex_replace('^v', '') }}.{{ k8s_package_version.split('.')[1] }}/deb/Release.key
+    dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc
+    owner: root
+    group: root
+    mode: "0644"
+    force: true
+
+- name: Select Kubernetes package repository
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list.d/kubernetes.list
+    owner: root
+    group: root
+    mode: "0644"
+    content: >-
+      deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc]
+      https://pkgs.k8s.io/core:/stable:/v{{ k8s_package_version.split('.')[0] | regex_replace('^v', '') }}.{{ k8s_package_version.split('.')[1] }}/deb/ /
+
+- name: Refresh apt metadata
+  ansible.builtin.apt:
+    update_cache: true
+
+- name: Check exact Kubernetes package is available
+  ansible.builtin.command:
+    argv:
+      - apt-cache
+      - madison
+      - kubeadm
+  register: k8s_available_kubeadm
+  changed_when: false
+
+- name: Require exact Kubernetes package
+  ansible.builtin.assert:
+    that:
+      - (k8s_package_version | regex_replace('^v', '')) + k8s_package_revision in k8s_available_kubeadm.stdout
+    fail_msg: >-
+      kubeadm {{ k8s_package_version | regex_replace('^v', '') }}{{ k8s_package_revision }}
+      is not available from the selected repository.

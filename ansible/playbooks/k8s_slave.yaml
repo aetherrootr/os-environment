@@ -22,3 +22,12 @@
     - import_role:
         name: k8s
         tasks_from: join_cluster
+
+- hosts: k8s-master
+  become: true
+  become_user: root
+  tasks:
+    - name: Validate installed Kubernetes cluster
+      import_role:
+        name: k8s_common
+        tasks_from: healthcheck

@@ -1,0 +1,64 @@
+---
+- name: Require supported Ubuntu release
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution == 'Ubuntu'
+      - ansible_distribution_version is version('22.04', '>=')
+    fail_msg: >-
+      {{ inventory_hostname }} runs unsupported
+      {{ ansible_distribution }} {{ ansible_distribution_version }}.
+
+- name: Check node services
+  ansible.builtin.command:
+    argv:
+      - systemctl
+      - is-active
+      - "{{ item }}"
+  loop:
+    - containerd
+    - kubelet
+  changed_when: false
+
+- name: Check node swap is disabled
+  ansible.builtin.command:
+    argv:
+      - swapon
+      - --show
+      - --noheadings
+  register: k8s_node_swap
+  changed_when: false
+  failed_when: k8s_node_swap.stdout | trim | length > 0
+
+- name: Read node containerd configuration
+  ansible.builtin.command:
+    argv:
+      - containerd
+      - config
+      - dump
+  register: k8s_node_containerd_config
+  changed_when: false
+
+- name: Validate node containerd cgroup configuration
+  ansible.builtin.assert:
+    that:
+      - "'SystemdCgroup = true' in k8s_node_containerd_config.stdout"
+    fail_msg: containerd must use SystemdCgroup on {{ inventory_hostname }}.
+
+- name: Check node free disk space
+  ansible.builtin.assert:
+    that:
+      - ansible_mounts | selectattr('mount', 'equalto', '/') | map(attribute='size_available') | first | int > 5368709120
+    fail_msg: At least 5 GiB free space is required on {{ inventory_hostname }}.
+
+- name: Check target package repository from node
+  ansible.builtin.uri:
+    url: >-
+      https://pkgs.k8s.io/core:/stable:/v{{ k8s_target_version.split('.')[0] | regex_replace('^v', '') }}.{{ k8s_target_version.split('.')[1] }}/deb/Release
+    method: GET
+    return_content: false
+    status_code: 200
+    timeout: 30
+  register: k8s_package_repository_check
+  until: k8s_package_repository_check.status | default(-1) == 200
+  retries: 3
+  delay: 10

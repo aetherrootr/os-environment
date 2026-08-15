@@ -1,27 +1,18 @@
 ---
-- import_role:
-    name: k8s
-    tasks_from: add_k8s_keyring
-
-- name: Install kubeadm, kubelet, kubectl
-  apt:
-    name: '{{ packages }}'
-    state: present
-    install_recommends: false
-    force: true
-    update_cache: true
+- name: Configure Kubernetes package repository
+  ansible.builtin.include_role:
+    name: k8s_common
+    tasks_from: repository
   vars:
-    packages:
-      - kubeadm 
+    k8s_package_version: "{{ k8s_bootstrap_version }}"
+
+- name: Install kubeadm, kubelet, and kubectl
+  ansible.builtin.include_role:
+    name: k8s_common
+    tasks_from: packages
+  vars:
+    k8s_package_version: "{{ k8s_bootstrap_version }}"
+    k8s_package_names:
+      - kubeadm
       - kubelet
       - kubectl
-
-# Hold the installed packages to prevent automatic updates
-- name: Hold Kubernetes packages
-  dpkg_selections:
-    name: "{{ item }}"
-    selection: hold
-  with_items:
-    - kubelet
-    - kubeadm
-    - kubectl

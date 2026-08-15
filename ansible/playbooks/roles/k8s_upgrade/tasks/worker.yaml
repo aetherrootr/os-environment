@@ -1,0 +1,122 @@
+---
+- name: Read worker version from the API
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - get
+      - node
+      - "{{ inventory_hostname_short }}"
+      - -o
+      - json
+  delegate_to: "{{ groups['k8s-master'][0] }}"
+  register: k8s_worker_version
+  until: k8s_worker_version.rc == 0
+  retries: 30
+  delay: 10
+  changed_when: false
+
+- name: Require expected worker version
+  ansible.builtin.assert:
+    that:
+      - (k8s_worker_version.stdout | from_json).status.nodeInfo.kubeletVersion in [k8s_previous_version, k8s_target_version]
+    fail_msg: >-
+      Worker {{ inventory_hostname_short }} is
+      {{ (k8s_worker_version.stdout | from_json).status.nodeInfo.kubeletVersion }};
+      expected {{ k8s_previous_version }} or {{ k8s_target_version }}.
+
+- name: Record worker version and cordon state
+  ansible.builtin.set_fact:
+    k8s_worker_kubelet_version: >-
+      {{ (k8s_worker_version.stdout | from_json).status.nodeInfo.kubeletVersion }}
+    k8s_worker_was_cordoned: >-
+      {{ (k8s_worker_version.stdout | from_json).spec.unschedulable | default(false) | bool }}
+
+- name: Back up worker configuration
+  ansible.builtin.include_tasks: backup_node.yaml
+
+- name: Configure target package repository
+  ansible.builtin.include_role:
+    name: k8s_common
+    tasks_from: repository
+  vars:
+    k8s_package_version: "{{ k8s_target_version }}"
+
+- name: Upgrade worker kubeadm
+  ansible.builtin.include_role:
+    name: k8s_common
+    tasks_from: packages
+  vars:
+    k8s_package_version: "{{ k8s_target_version }}"
+    k8s_package_names:
+      - kubeadm
+
+- name: Drain worker node
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - drain
+      - "{{ inventory_hostname_short }}"
+      - --ignore-daemonsets
+      - --delete-emptydir-data
+      - "--timeout={{ k8s_drain_timeout }}"
+  delegate_to: "{{ groups['k8s-master'][0] }}"
+  when: k8s_worker_kubelet_version != k8s_target_version
+
+- name: Upgrade worker node configuration
+  ansible.builtin.command:
+    argv:
+      - kubeadm
+      - upgrade
+      - node
+  when: k8s_worker_kubelet_version != k8s_target_version
+
+- name: Upgrade worker kubelet and kubectl
+  ansible.builtin.include_role:
+    name: k8s_common
+    tasks_from: packages
+  vars:
+    k8s_package_version: "{{ k8s_target_version }}"
+    k8s_package_names:
+      - kubelet
+      - kubectl
+
+- name: Restart worker kubelet
+  ansible.builtin.systemd:
+    name: kubelet
+    state: restarted
+    daemon_reload: true
+
+- name: Wait for upgraded worker readiness
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - get
+      - node
+      - "{{ inventory_hostname_short }}"
+      - -o
+      - "jsonpath={.status.conditions[?(@.type=='Ready')].status} {.status.nodeInfo.kubeletVersion}"
+  delegate_to: "{{ groups['k8s-master'][0] }}"
+  register: k8s_worker_ready
+  until: k8s_worker_ready.stdout == 'True ' + k8s_target_version
+  retries: 60
+  delay: 10
+  changed_when: false
+
+- name: Uncordon upgraded worker
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - uncordon
+      - "{{ inventory_hostname_short }}"
+  delegate_to: "{{ groups['k8s-master'][0] }}"
+  when: >-
+    k8s_worker_kubelet_version != k8s_target_version or
+    (k8s_worker_was_cordoned and (k8s_recover_cordoned_nodes | bool))

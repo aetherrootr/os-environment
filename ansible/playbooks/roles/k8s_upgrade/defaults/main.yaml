@@ -1,0 +1,15 @@
+---
+k8s_kubeconfig: /etc/kubernetes/admin.conf
+k8s_backup_root: /var/backups/kubernetes-upgrade
+k8s_local_backup_root: "{{ playbook_dir }}/../backups"
+k8s_drain_timeout: 20m
+k8s_upgrade_confirm: false
+k8s_data_backup_confirmed: false
+k8s_recover_cordoned_nodes: true
+k8s_cert_rotation_policy_confirmed: false
+k8s_pre_calico_version: ""
+k8s_pre_cert_manager_version: ""
+k8s_pre_ingress_nginx_version: ""
+k8s_post_calico_version: ""
+k8s_post_cert_manager_version: ""
+k8s_post_ingress_nginx_version: ""

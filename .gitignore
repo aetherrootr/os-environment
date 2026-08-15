@@ -1,3 +1,4 @@
 kubernetes/**/vendor
 kubernetes/**/charts
 kubernetes/**/generated
+ansible/backups/

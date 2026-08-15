@@ -6,7 +6,7 @@ etcd:
   local:
     dataDir: /var/lib/etcd
 imageRepository: registry.k8s.io
-kubernetesVersion: 1.29.0
+kubernetesVersion: {{ k8s_bootstrap_version }}
 networking:
   dnsDomain: cluster.local
   serviceSubnet: 10.96.0.0/12,2001:db8:42:1::/112

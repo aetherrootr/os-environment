@@ -1,0 +1,43 @@
+---
+- name: Apply Calico manifest
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - apply
+      - --server-side
+      - --force-conflicts
+      - -f
+      - "https://raw.githubusercontent.com/projectcalico/calico/{{ k8s_calico_version }}/manifests/calico.yaml"
+  when: k8s_calico_version | length > 0
+
+- name: Wait for Calico daemon set
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - --namespace
+      - kube-system
+      - rollout
+      - status
+      - daemonset/calico-node
+      - --timeout=10m
+  changed_when: false
+  when: k8s_calico_version | length > 0
+
+- name: Wait for Calico controllers
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - --namespace
+      - kube-system
+      - rollout
+      - status
+      - deployment/calico-kube-controllers
+      - --timeout=10m
+  changed_when: false
+  when: k8s_calico_version | length > 0

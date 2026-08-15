@@ -1,0 +1,124 @@
+---
+- name: Read control-plane kubelet version
+  ansible.builtin.command:
+    argv:
+      - kubelet
+      - --version
+  register: k8s_control_plane_kubelet
+  changed_when: false
+
+- name: Read control-plane scheduling state
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - get
+      - node
+      - "{{ ansible_hostname }}"
+      - -o
+      - json
+  register: k8s_control_plane_node
+  changed_when: false
+
+- name: Record control-plane cordon state
+  ansible.builtin.set_fact:
+    k8s_control_plane_was_cordoned: >-
+      {{ (k8s_control_plane_node.stdout | from_json).spec.unschedulable | default(false) | bool }}
+
+- name: Configure target package repository
+  ansible.builtin.include_role:
+    name: k8s_common
+    tasks_from: repository
+  vars:
+    k8s_package_version: "{{ k8s_target_version }}"
+
+- name: Upgrade control-plane kubeadm
+  ansible.builtin.include_role:
+    name: k8s_common
+    tasks_from: packages
+  vars:
+    k8s_package_version: "{{ k8s_target_version }}"
+    k8s_package_names:
+      - kubeadm
+
+- name: Check kubeadm upgrade plan
+  ansible.builtin.command:
+    argv:
+      - kubeadm
+      - upgrade
+      - plan
+      - "{{ k8s_target_version }}"
+  register: k8s_upgrade_plan
+  changed_when: false
+  when: k8s_current_server_version != k8s_target_version
+
+- name: Drain control-plane node
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - drain
+      - "{{ ansible_hostname }}"
+      - --ignore-daemonsets
+      - --delete-emptydir-data
+      - "--timeout={{ k8s_drain_timeout }}"
+  when: >-
+    k8s_current_server_version != k8s_target_version or
+    k8s_target_version not in k8s_control_plane_kubelet.stdout
+
+- name: Apply control-plane upgrade
+  ansible.builtin.command:
+    argv:
+      - kubeadm
+      - upgrade
+      - apply
+      - "{{ k8s_target_version }}"
+      - --yes
+  when: k8s_current_server_version != k8s_target_version
+
+- name: Upgrade control-plane kubelet and kubectl
+  ansible.builtin.include_role:
+    name: k8s_common
+    tasks_from: packages
+  vars:
+    k8s_package_version: "{{ k8s_target_version }}"
+    k8s_package_names:
+      - kubelet
+      - kubectl
+
+- name: Restart control-plane kubelet
+  ansible.builtin.systemd:
+    name: kubelet
+    state: restarted
+    daemon_reload: true
+
+- name: Wait for API readiness after control-plane upgrade
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - get
+      - --raw=/readyz
+  register: k8s_control_plane_readyz
+  until:
+    - k8s_control_plane_readyz.rc == 0
+    - k8s_control_plane_readyz.stdout | trim == 'ok'
+  retries: 60
+  delay: 10
+  changed_when: false
+
+- name: Uncordon control-plane node
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - uncordon
+      - "{{ ansible_hostname }}"
+  when: >-
+    k8s_current_server_version != k8s_target_version or
+    k8s_target_version not in k8s_control_plane_kubelet.stdout or
+    (k8s_control_plane_was_cordoned and (k8s_recover_cordoned_nodes | bool))

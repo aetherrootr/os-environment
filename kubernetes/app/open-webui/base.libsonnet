@@ -21,18 +21,9 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
     k8sUtils.generateEnv(name='OAUTH_PROVIDER_NAME', value='Authentik'),
     k8sUtils.generateEnv(name='OAUTH_CLIENT_ID', value='9uaYJc8qRxugssWl8z2Ja73sVC60LwIpQN3oc3P1'),
     k8sUtils.generateSecretEnv(name='OAUTH_CLIENT_SECRET', secretName=$.appSecretName, key='oidc-client-secret'),
-    k8sUtils.generateEnv(
-      name='OPENID_PROVIDER_URL',
-      value='https://authentik.aetherrootr.com/application/o/open-webui/.well-known/openid-configuration',
-    ),
-    k8sUtils.generateEnv(
-      name='OPENID_REDIRECT_URI',
-      value='https://' + hosts[0] + '/oauth/oidc/callback',
-    ),
-    k8sUtils.generateEnv(
-      name='OPENID_END_SESSION_ENDPOINT',
-      value='https://authentik.aetherrootr.com/application/o/open-webui/end-session/',
-    ),
+    k8sUtils.generateEnv(name='OPENID_PROVIDER_URL', value='https://authentik.aetherrootr.com/application/o/open-webui/.well-known/openid-configuration'),
+    k8sUtils.generateEnv(name='OPENID_REDIRECT_URI', value='https://' + hosts[0] + '/oauth/oidc/callback'),
+    k8sUtils.generateEnv(name='OPENID_END_SESSION_ENDPOINT', value='https://open-webui.corp.aetherrootr.com'),
     k8sUtils.generateEnv(name='OAUTH_SCOPES', value='openid email profile'),
     k8sUtils.generateEnv(name='TZ', value='Asia/Shanghai'),
   ]),

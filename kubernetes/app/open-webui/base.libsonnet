@@ -15,6 +15,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
     k8sUtils.generateEnv(name='ENABLE_PERSISTENT_CONFIG', value='true'),
     k8sUtils.generateEnv(name='WEBUI_SECRET_KEY_FILE', value='/app/backend/data/.webui_secret_key'),
     k8sUtils.generateEnv(name='WEBUI_URL', value='https://' + hosts[0]),
+    k8sUtils.generateEnv(name='ENABLE_RAG_LOCAL_WEB_FETCH', value='True'),
     k8sUtils.generateEnv(name='ENABLE_OAUTH', value='true'),
     k8sUtils.generateEnv(name='ENABLE_OAUTH_SIGNUP', value='true'),
     k8sUtils.generateEnv(name='OAUTH_PROVIDER_NAME', value='Authentik'),

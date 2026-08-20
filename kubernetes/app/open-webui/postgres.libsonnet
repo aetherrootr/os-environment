@@ -1,0 +1,61 @@
+local k8sUtils = import 'utils/k8s-utils.libsonnet';
+
+{
+  namespace:: error ('namespace is required'),
+  appName:: error ('appName is required'),
+  databaseHost:: error ('databaseHost is required'),
+  databasePort:: error ('databasePort is required'),
+  databaseName:: error ('databaseName is required'),
+  databaseUser:: error ('databaseUser is required'),
+  databasePasswordSecretName:: error ('databasePasswordSecretName is required'),
+  replicas:: 1,
+
+  local containerImage = 'postgres:17-alpine',
+
+  local appEnv = [
+    k8sUtils.generateEnv(name='POSTGRES_DB', value=$.databaseName),
+    k8sUtils.generateEnv(name='POSTGRES_USER', value=$.databaseUser),
+    k8sUtils.generateSecretEnv(name='POSTGRES_PASSWORD', secretName=$.databasePasswordSecretName, key='password'),
+    k8sUtils.generateEnv(name='TZ', value='Asia/Shanghai'),
+  ],
+
+  local containers = k8sUtils.generateContainers(
+    containerName=$.databaseHost,
+    image=containerImage,
+    ports=[k8sUtils.generateContainerPort(name='postgres', containerPort=$.databasePort)],
+    resources={
+      requests: { cpu: '100m', memory: '256Mi' },
+      limits: { cpu: '1000m', memory: '1Gi' },
+    },
+    env=appEnv,
+    volumeMounts=[
+      k8sUtils.generateVolumeMount(
+        name=$.appName + '-data-pvc',
+        mountPath='/var/lib/postgresql/data',
+        subPath=std.strReplace($.appName + '/postgres', '-', '_'),
+      ),
+    ],
+  ),
+
+  postgres: std.prune([
+    k8sUtils.generateService(
+      namespace=$.namespace,
+      appName=$.databaseHost,
+      ports=[k8sUtils.generateServicePort(name='postgres', port=$.databasePort, targetPort=$.databasePort)],
+    ),
+    k8sUtils.generateStatefulSet(
+      namespace=$.namespace,
+      appName=$.databaseHost,
+      containers=containers,
+      podSpec=k8sUtils.generatePodSpec(
+        volumes=[{
+          name: $.appName + '-data-pvc',
+          persistentVolumeClaim: {
+            claimName: k8sUtils.getPVCName(namespace=$.namespace, storageClass='service-data'),
+          },
+        }],
+      ),
+      replicas=$.replicas,
+    ),
+  ]),
+}

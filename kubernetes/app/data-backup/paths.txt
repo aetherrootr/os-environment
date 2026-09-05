@@ -1,0 +1,16 @@
+wikijs
+filebrowser
+golinks
+komga
+gitea
+homeassistant
+media_streaming_stack
+sub_cache
+grafana
+authentik
+authentik_postgres
+authentik_redis
+immich
+immich_postgresdb
+openlist
+ani_tracker/pg_backup

@@ -1,4 +1,5 @@
 local k8sUtils = import 'utils/k8s-utils.libsonnet';
+local sqliteBackup = import 'utils/sqlite-backup.libsonnet';
 local prometheusDatasource = importstr 'datasource/prometheus.yaml';
 
 {
@@ -57,6 +58,15 @@ local prometheusDatasource = importstr 'datasource/prometheus.yaml';
     ],
   ),
 
+  local sqliteBackupResources = sqliteBackup {
+    namespace: $.namespace,
+    appName: $.appName,
+    databasePaths: ['grafana/grafana.db'],
+    backupSubPath: 'grafana/sqlite_backup',
+    runAsUser: 472,
+    backupFileMode: '0644',
+  },
+
   apiVersion: 'apps/v1',
   kind: 'list',
   items: std.prune([
@@ -106,5 +116,5 @@ local prometheusDatasource = importstr 'datasource/prometheus.yaml';
       hostnameList=hosts,
       certificateName=$.certificateName,
     ),
-  ]),
+  ] + sqliteBackupResources.cron),
 }

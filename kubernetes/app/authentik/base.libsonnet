@@ -1,5 +1,6 @@
 local authentik = import 'authentik.libsonnet';
 local postgresdb = import 'postgresdb.libsonnet';
+local postgresBackup = import 'utils/postgres-backup.libsonnet';
 
 {
   namespace:: error ('namespace is required'),
@@ -31,10 +32,22 @@ local postgresdb = import 'postgresdb.libsonnet';
     databaseUser: $.databaseUser,
   },
 
+  local postgresBackupResources = postgresBackup {
+    namespace: $.namespace,
+    appName: $.appName,
+    databaseHost: $.databaseHost,
+    databasePort: $.databasePort,
+    databaseName: $.databaseName,
+    databaseUser: $.databaseUser,
+    databasePasswordSecretName: $.databasePasswordSecretName,
+    databasePasswordSecretKey: 'postgres-password',
+  },
+
   apiVersion: 'apps/v1',
   kind: 'list',
   items: std.prune(
     postgresResources.postgresdb
     + authentikResources.authentik
+    + postgresBackupResources.cron
   ),
 }

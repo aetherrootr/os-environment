@@ -1,0 +1,66 @@
+[
+  {
+    "path": "wikijs",
+    "excludes": ["/data/**"]
+  },
+  { "path": "filebrowser" },
+  { "path": "golinks" },
+  {
+    "path": "komga",
+    "excludes": [
+      "/database.sqlite",
+      "/database.sqlite-*",
+      "/tasks.sqlite",
+      "/tasks.sqlite-*"
+    ]
+  },
+  {
+    "path": "gitea",
+    "excludes": ["/postgres/**"]
+  },
+  {
+    "path": "homeassistant",
+    "excludes": ["/home-assistant_v2.db", "/home-assistant_v2.db-*"]
+  },
+  {
+    "path": "media_streaming_stack",
+    "excludes": [
+      "/bazarr_config/db/bazarr.db",
+      "/bazarr_config/db/bazarr.db-*",
+      "/jellyfin_config/data/jellyfin.db",
+      "/jellyfin_config/data/jellyfin.db-*",
+      "/jellyfin_config/data/library.db",
+      "/jellyfin_config/data/library.db-*",
+      "/jellyseerr_config/db/db.sqlite3",
+      "/jellyseerr_config/db/db.sqlite3-*",
+      "/jproxy/jproxy.db",
+      "/jproxy/jproxy.db-*",
+      "/radarr_config/logs.db",
+      "/radarr_config/logs.db-*",
+      "/radarr_config/radarr.db",
+      "/radarr_config/radarr.db-*",
+      "/sonarr_config/logs.db",
+      "/sonarr_config/logs.db-*",
+      "/sonarr_config/sonarr.db",
+      "/sonarr_config/sonarr.db-*"
+    ]
+  },
+  {
+    "path": "sub_cache",
+    "excludes": [
+      "/database/subscription.db",
+      "/database/subscription.db-*"
+    ]
+  },
+  {
+    "path": "grafana",
+    "excludes": ["/grafana.db", "/grafana.db-*"]
+  },
+  { "path": "authentik" },
+  { "path": "immich" },
+  {
+    "path": "openlist",
+    "excludes": ["/data.db", "/data.db-*"]
+  },
+  { "path": "ani_tracker/pg_backup" }
+]

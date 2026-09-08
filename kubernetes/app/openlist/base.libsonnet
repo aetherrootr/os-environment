@@ -1,4 +1,5 @@
 local k8sUtils = import 'utils/k8s-utils.libsonnet';
+local sqliteBackup = import 'utils/sqlite-backup.libsonnet';
 
 {
   namespace:: error ('namespace is required'),
@@ -47,6 +48,13 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       runAsUser: 0,
       runAsGroup: 0,
     },
+  },
+
+  local sqliteBackupResources = sqliteBackup {
+    namespace: $.namespace,
+    appName: $.appName,
+    databasePaths: ['openlist/data.db'],
+    backupSubPath: 'openlist/sqlite_backup',
   },
 
   apiVersion: 'apps/v1',
@@ -99,5 +107,5 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       hostnameList=hosts,
       certificateName=$.certificateName,
     ),
-  ]),
+  ] + sqliteBackupResources.cron),
 }

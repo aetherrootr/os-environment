@@ -1,5 +1,6 @@
-local postgresdb = import 'postgresdb.libsonnet';
 local gitea = import 'gitea.libsonnet';
+local postgresdb = import 'postgresdb.libsonnet';
+local postgresBackup = import 'utils/postgres-backup.libsonnet';
 
 {
   namespace:: error ('namespace is required'),
@@ -30,10 +31,20 @@ local gitea = import 'gitea.libsonnet';
     databasePasswordSecretName: $.databasePasswordSecretName,
   },
 
+  local postgresBackupResources = postgresBackup {
+    namespace: $.namespace,
+    appName: $.appName,
+    databaseHost: $.databaseHost,
+    databasePort: $.databasePort,
+    databaseName: $.databaseName,
+    databaseUser: $.databaseUser,
+    databasePasswordSecretName: $.databasePasswordSecretName,
+  },
+
 
   apiVersion: 'apps/v1',
   kind: 'list',
   items: std.prune(
-    giteaResources.gitea + postgresdbResources.postgresdb,
+    giteaResources.gitea + postgresdbResources.postgresdb + postgresBackupResources.cron,
   ),
 }

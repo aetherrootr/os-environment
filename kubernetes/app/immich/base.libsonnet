@@ -2,6 +2,7 @@ local immichMachineLearning = import 'immich_machine_learning.libsonnet';
 local immichServer = import 'immich_server.libsonnet';
 local postgresdb = import 'postgresdb.libsonnet';
 local redis = import 'redis.libsonnet';
+local postgresBackup = import 'utils/postgres-backup.libsonnet';
 
 {
   namespace:: error ('namespace is required'),
@@ -32,7 +33,16 @@ local redis = import 'redis.libsonnet';
     databaseUser: $.postgresDatabaseUser,
     databasePasswordSecretName: $.postgresDatabasePasswordSecretName,
   },
-  local  immichMachineLearningResources = immichMachineLearning {
+  local postgresBackupResources = postgresBackup {
+    namespace: $.namespace,
+    appName: $.appName,
+    databaseHost: $.postgresDatabaseHost,
+    databasePort: $.postgresDatabasePort,
+    databaseName: $.postgresDatabaseName,
+    databaseUser: $.postgresDatabaseUser,
+    databasePasswordSecretName: $.postgresDatabasePasswordSecretName,
+  },
+  local immichMachineLearningResources = immichMachineLearning {
     namespace: $.namespace,
     appName: $.appName,
     immichVersion: $.immichVersion,
@@ -57,6 +67,7 @@ local redis = import 'redis.libsonnet';
   items: std.prune(
     redisResources.redis +
     postgresResources.postgresdb +
+    postgresBackupResources.cron +
     immichMachineLearningResources.immich_ml +
     immichServerResources.immich_server
   ),

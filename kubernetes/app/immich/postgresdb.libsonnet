@@ -17,7 +17,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
     k8sUtils.generateEnv(name='POSTGRES_DB', value=$.databaseName),
     k8sUtils.generateEnv(name='POSTGRES_USER', value=$.databaseUser),
     k8sUtils.generateSecretEnv(name='POSTGRES_PASSWORD', secretName=$.databasePasswordSecretName, key='password'),
-    k8sUtils.generateEnv(name='POSTGRES_INITDB_ARGS', value='--data-checksums')
+    k8sUtils.generateEnv(name='POSTGRES_INITDB_ARGS', value='--data-checksums'),
   ]),
 
 
@@ -45,7 +45,6 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
         subPath=std.strReplace($.appName + '/postgres', '-', '_'),
       ),
     ],
-    command=["redis-server", "--appendonly", "yes"],
   ),
 
   postgresdb: std.prune([

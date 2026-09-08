@@ -6,6 +6,7 @@ local jproxy = import 'jproxy.libsonnet';
 local qbittorrent = import 'qbittorrent.libsonnet';
 local radarr = import 'radarr.libsonnet';
 local sonarr = import 'sonarr.libsonnet';
+local sqliteBackup = import 'utils/sqlite-backup.libsonnet';
 
 {
   namespace:: error ('namespace is required'),
@@ -40,7 +41,7 @@ local sonarr = import 'sonarr.libsonnet';
     namespace: $.namespace,
     deployName: $.deployName,
   },
-  
+
   local radarrResources = radarr {
     namespace: $.namespace,
     deployName: $.deployName,
@@ -49,6 +50,21 @@ local sonarr = import 'sonarr.libsonnet';
   local sonarrResources = sonarr {
     namespace: $.namespace,
     deployName: $.deployName,
+  },
+
+  local sqliteBackupResources = sqliteBackup {
+    namespace: $.namespace,
+    appName: $.deployName,
+    databasePaths: [
+      'media_streaming_stack/bazarr_config/db/bazarr.db',
+      'media_streaming_stack/jellyfin_config/data/jellyfin.db',
+      'media_streaming_stack/jellyfin_config/data/library.db',
+      'media_streaming_stack/jellyseerr_config/db/db.sqlite3',
+      'media_streaming_stack/jproxy/jproxy.db',
+      'media_streaming_stack/radarr_config/radarr.db',
+      'media_streaming_stack/sonarr_config/sonarr.db',
+    ],
+    backupSubPath: 'media_streaming_stack/sqlite_backup',
   },
 
   apiVersion: 'apps/v1',
@@ -62,5 +78,6 @@ local sonarr = import 'sonarr.libsonnet';
     + qbittorrentResources.qbittorrent
     + radarrResources.radarr
     + sonarrResources.sonarr
+    + sqliteBackupResources.cron
   ),
 }

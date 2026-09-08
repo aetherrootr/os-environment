@@ -1,4 +1,5 @@
 local postgresdb = import 'postgresdb.libsonnet';
+local postgresBackup = import 'utils/postgres-backup.libsonnet';
 local wikijs = import 'wikijs.libsonnet';
 
 {
@@ -30,10 +31,20 @@ local wikijs = import 'wikijs.libsonnet';
     databasePasswordSecretName: $.databasePasswordSecretName,
   },
 
+  local postgresBackupResources = postgresBackup {
+    namespace: $.namespace,
+    appName: $.appName,
+    databaseHost: $.databaseHost,
+    databasePort: $.databasePort,
+    databaseName: $.databaseName,
+    databaseUser: $.databaseUser,
+    databasePasswordSecretName: $.databasePasswordSecretName,
+  },
+
 
   apiVersion: 'apps/v1',
   kind: 'list',
   items: std.prune(
-    wikijsResources.wikijs + postgresdbResources.postgresdb,
+    wikijsResources.wikijs + postgresdbResources.postgresdb + postgresBackupResources.cron,
   ),
 }

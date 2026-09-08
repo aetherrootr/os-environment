@@ -1,4 +1,5 @@
 local k8sUtils = import 'utils/k8s-utils.libsonnet';
+local sqliteBackup = import 'utils/sqlite-backup.libsonnet';
 local homeassistantConfig = importstr 'config/configuration.yaml';
 
 {
@@ -46,9 +47,17 @@ local homeassistantConfig = importstr 'config/configuration.yaml';
         name=$.appName + '-config',
         mountPath='/config/configuration.yaml',
         readOnly=true,
-        subPath='configuration.yaml',)
+        subPath='configuration.yaml',
+      ),
     ],
   ),
+
+  local sqliteBackupResources = sqliteBackup {
+    namespace: $.namespace,
+    appName: $.appName,
+    databasePaths: ['homeassistant/home-assistant_v2.db'],
+    backupSubPath: 'homeassistant/sqlite_backup',
+  },
 
   apiVersion: 'apps/v1',
   kind: 'list',
@@ -120,5 +129,5 @@ local homeassistantConfig = importstr 'config/configuration.yaml';
       hostnameList=hosts,
       certificateName=$.certificateName,
     ),
-  ]),
+  ] + sqliteBackupResources.cron),
 }

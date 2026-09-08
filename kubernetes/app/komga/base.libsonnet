@@ -1,4 +1,5 @@
 local k8sUtils = import 'utils/k8s-utils.libsonnet';
+local sqliteBackup = import 'utils/sqlite-backup.libsonnet';
 
 {
   namespace:: error ('namespace is required'),
@@ -54,6 +55,16 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
     ]
   ),
 
+  local sqliteBackupResources = sqliteBackup {
+    namespace: $.namespace,
+    appName: $.appName,
+    databasePaths: [
+      'komga/database.sqlite',
+      'komga/tasks.sqlite',
+    ],
+    backupSubPath: 'komga/sqlite_backup',
+  },
+
   apiVersion: 'apps/v1',
   kind: 'list',
   items: std.prune([
@@ -108,5 +119,5 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       hostnameList=hosts,
       certificateName=$.certificateName,
     ),
-  ]),
+  ] + sqliteBackupResources.cron),
 }

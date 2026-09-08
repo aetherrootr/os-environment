@@ -1,7 +1,7 @@
 local aniTracker = import 'ani-tracker.libsonnet';
-local cronjob = import 'cronjob.libsonnet';
 local postgres = import 'postgres.libsonnet';
 local redis = import 'redis.libsonnet';
+local postgresBackup = import 'utils/postgres-backup.libsonnet';
 
 {
   namespace:: error ('namespace is required'),
@@ -47,7 +47,7 @@ local redis = import 'redis.libsonnet';
     redisDatabasePort: $.redisDatabasePort,
   },
 
-  local cronjobResources = cronjob {
+  local postgresBackupResources = postgresBackup {
     namespace: $.namespace,
     appName: $.appName,
     databaseHost: $.databaseHost,
@@ -63,6 +63,6 @@ local redis = import 'redis.libsonnet';
     aniTrackerResources.aniTracker +
     postgresResources.postgresdb +
     redisResources.redis +
-    cronjobResources.cron
+    postgresBackupResources.cron
   ),
 }

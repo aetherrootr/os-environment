@@ -6,7 +6,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   replicas:: 1,
   certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
-  local containerImage = 'cloudflare/cloudflared:2026.5.2',
+  local containerImage = 'cloudflare/cloudflared:2026.10.2',
 
   local appEnv = std.prune([
     k8sUtils.generateSecretEnv(name='TUNNEL_TOKEN', secretName='cloudflared-secret', key='tunnel_token'),

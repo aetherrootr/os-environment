@@ -27,7 +27,7 @@ The application entry imports [base.libsonnet](base.libsonnet), which assembles 
 | [application-controller.libsonnet](application-controller.libsonnet) | StatefulSet that reconciles applications |
 | [applicationset-controller.libsonnet](applicationset-controller.libsonnet) | Generates applications from ApplicationSets |
 | [redis.libsonnet](redis.libsonnet) | Redis cache using the Bitwarden-managed `argocd-redis` Secret |
-| [dex-server.libsonnet](dex-server.libsonnet) | Bundled Dex component; SSO connectors require separate configuration |
+| [dex-server.libsonnet](dex-server.libsonnet) | Bundled Dex component |
 | [notifications-controller.libsonnet](notifications-controller.libsonnet) | Notifications controller and metrics Service |
 | [config.libsonnet](config.libsonnet) | Argo CD ConfigMaps |
 | [notifications.libsonnet](notifications.libsonnet) | Fastmail SMTP service, email templates and triggers |
@@ -78,7 +78,7 @@ brew install argocd
 
 Homebrew installs the version currently provided by its [argocd formula](https://formulae.brew.sh/formula/argocd).
 
-### Email notifications
+## Email notifications
 
 Configure recipients by editing each Application's manifest in the Argo CD UI and adding [notification subscription annotations](https://argo-cd.readthedocs.io/en/stable/user-guide/subscriptions/), such as `notifications.argoproj.io/subscribe.on-sync-failed.email` and `notifications.argoproj.io/subscribe.on-health-degraded.email`, with recipient email addresses as their values. These manifests define no global subscriptions. The Bitwarden operator manages the notification Secret directly.
 
@@ -93,7 +93,7 @@ Configure recipients by editing each Application's manifest in the Argo CD UI an
 
 Subscribe to each desired trigger using `notifications.argoproj.io/subscribe.<trigger>.email`. Synchronization lifecycle notifications use the operation start time for deduplication, so a new synchronization of the same commit can notify again. Subscribing to both `on-sync-succeeded` and `on-deployed` produces separate completion and health notifications, which may arrive close together.
 
-### Password timestamp trade-off
+## Password timestamp trade-off
 
 `admin.passwordMtime` is intentionally absent from the Bitwarden mapping. Argo CD fills it in at startup when it is missing. A later Bitwarden synchronization can remove the generated field when rewriting Secret data.
 

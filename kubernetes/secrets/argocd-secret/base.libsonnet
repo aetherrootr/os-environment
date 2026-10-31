@@ -22,6 +22,10 @@ local secretUtils = import 'utils/secret-utils.libsonnet';
           bwSecretId='50b66d42-889e-43ee-9427-b4f4011c7c93',
           secretKeyName='server.secretkey',
         ),
+        secretUtils.generateBwSecret(
+          bwSecretId='19caacb0-9ebc-4b8d-a167-b4f4013fe99f',
+          secretKeyName='dex.authentik.clientSecret',
+        ),
       ],
     ),
   ],

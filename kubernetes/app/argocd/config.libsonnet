@@ -110,7 +110,24 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
             - ClusterBackgroundScanReport
             - UpdateRequest
         |||,
-      } + { url: 'https://' + $.hostname },
+      } + {
+        url: 'https://' + $.hostname,
+        'dex.config': |||
+          connectors:
+            - type: oidc
+              id: authentik
+              name: Authentik
+              config:
+                issuer: https://authentik.aetherrootr.com/application/o/argocd/
+                clientID: 9QHLIhAaoRViq1ve8pFn43C4TvJheCbLOtoCFZna
+                clientSecret: $dex.authentik.clientSecret
+                insecureEnableGroups: true
+                scopes:
+                  - openid
+                  - profile
+                  - email
+        |||,
+      },
       labels={
         'app.kubernetes.io/name': 'argocd-cm',
         'app.kubernetes.io/part-of': 'argocd',
@@ -138,7 +155,14 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
     k8sUtils.generateConfigMap(
       namespace=$.namespace,
       appName='argocd-rbac-cm',
-      data={},
+      data={
+        'policy.default': 'role:authenticated',
+        scopes: '[groups]',
+        'policy.csv': |||
+          g, argocd-admins, role:admin
+          g, argocd-readonly, role:readonly
+        |||,
+      },
       labels={
         'app.kubernetes.io/name': 'argocd-rbac-cm',
         'app.kubernetes.io/part-of': 'argocd',

@@ -27,10 +27,11 @@ local tankaUtils = import 'common/lib/tanka-utils.libsonnet';
     $.tk.configMap.new(appName, data) +
     defaultMetadata(appName, namespace, labels),
 
-  generateConfigMapEnv(name, configMapName, key):
+  generateConfigMapEnv(name, configMapName, key, optional=null):
     $.tk.envVar.withName(name)
     + $.tk.envVar.valueFrom.configMapKeyRef.withName(configMapName)
-    + $.tk.envVar.valueFrom.configMapKeyRef.withKey(key),
+    + $.tk.envVar.valueFrom.configMapKeyRef.withKey(key)
+    + (if optional != null then $.tk.envVar.valueFrom.configMapKeyRef.withOptional(optional) else {}),
 
   generateContainers(containerName,
                      image,
@@ -237,20 +238,22 @@ local tankaUtils = import 'common/lib/tanka-utils.libsonnet';
     $.tk.volumeMount.new(name, mountPath, readOnly)
     + (if subPath != null then $.tk.volumeMount.withSubPath(subPath) else {}),
 
-  generateConfigMapVolume(name, configMapName, items=[]):
+  generateConfigMapVolume(name, configMapName, items=[], optional=null):
     $.tk.volume.withName(name)
     + $.tk.volume.configMap.withName(configMapName)
-    + (if items != [] then $.tk.volume.configMap.withItems(items) else {}),
+    + (if items != [] then $.tk.volume.configMap.withItems(items) else {})
+    + (if optional != null then $.tk.volume.configMap.withOptional(optional) else {}),
 
   generateVolumeItem(key, path): {
     key: key,
     path: path,
   },
 
-  generateSecretVolume(name, secretName, items=[]):
+  generateSecretVolume(name, secretName, items=[], optional=null):
     $.tk.volume.withName(name)
     + $.tk.volume.secret.withSecretName(secretName)
-    + (if items != [] then $.tk.volume.secret.withItems(items) else {}),
+    + (if items != [] then $.tk.volume.secret.withItems(items) else {})
+    + (if optional != null then $.tk.volume.secret.withOptional(optional) else {}),
 
   importFromHelmChart(projectPath,
                       name,

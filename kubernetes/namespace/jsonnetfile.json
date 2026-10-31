@@ -7,6 +7,13 @@
             "directory": "kubernetes-dashboard"
           }
         }
+      },
+      {
+        "source": {
+          "local": {
+            "directory": "utils"
+          }
+        }
       }
     ],
     "legacyImports": true

@@ -6,7 +6,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   appSecretName:: error ('appSecretName is required'),
   port:: 8000,
   
-  local containerImage = 'ghcr.io/open-webui/open-terminal:0.11.35',
+  local containerImage = 'ghcr.io/open-webui/open-terminal:0.15.1',
 
   local containers = k8sUtils.generateContainers(
     containerName=$.appName,

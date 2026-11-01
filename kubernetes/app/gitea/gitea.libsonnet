@@ -14,7 +14,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
 
   local hosts = [k8sUtils.getServiceHostname(serviceName='gitea')],
 
-  local containerImage = 'docker.gitea.com/gitea:1.26.2',
+  local containerImage = 'docker.gitea.com/gitea:28.3.0',
   local initContainerImage = 'busybox:1.35.0',
 
   local appEnv = std.prune([
@@ -139,7 +139,9 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
         ],
       ),
       replicas=$.replicas,
-    ),
+    ) + {
+      spec+: { strategy: { type: 'Recreate' } },
+    },
     k8sUtils.generateIngress(
       namespace=$.namespace,
       appName=$.appName,

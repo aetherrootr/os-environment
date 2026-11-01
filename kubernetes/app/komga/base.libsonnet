@@ -9,7 +9,7 @@ local sqliteBackup = import 'utils/sqlite-backup.libsonnet';
   certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
   urlPrefix:: 'library',
 
-  local containerImage = 'gotson/komga:1.24.3',
+  local containerImage = 'gotson/komga:1.29.2',
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.urlPrefix)],
 
 

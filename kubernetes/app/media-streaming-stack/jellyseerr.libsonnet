@@ -10,7 +10,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
 
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.appName)],
 
-  local containerImage = 'ghcr.io/seerr-team/seerr:v3.1.0',
+  local containerImage = 'ghcr.io/seerr-team/seerr:v3.5.1',
 
   local appEnv = std.prune([
     k8sUtils.generateEnv(name='PUID', value='1000'),

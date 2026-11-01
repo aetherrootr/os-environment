@@ -23,7 +23,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   ],
   local backupContainers = k8sUtils.generateContainers(
     containerName=c.appName,
-    image='rclone/rclone:1.73.4',
+    image='rclone/rclone:1.75.2',
     command=['/bin/sh', '/scripts/backup.sh'],
     env=commonEnv + [
       k8sUtils.generateEnv(name='PATH_CONCURRENCY', value='3'),
@@ -37,7 +37,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   ),
   local snapshotContainers = k8sUtils.generateContainers(
     containerName=c.appName + '-snapshot',
-    image='rclone/rclone:1.73.4',
+    image='rclone/rclone:1.75.2',
     command=['/bin/sh', '/scripts/snapshot.sh'],
     env=commonEnv + [
       k8sUtils.generateEnv(name='RETENTION_DAYS', value=std.toString(c.snapshotRetentionDays)),

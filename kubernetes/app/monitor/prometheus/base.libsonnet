@@ -18,8 +18,8 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.appName)],
 
 
-  local containerImage = 'prom/prometheus:v3.4.2',
-  local sidecarImage = 'thanosio/thanos:v0.38.0',
+  local containerImage = 'prom/prometheus:v3.15.1',
+  local sidecarImage = 'thanosio/thanos:v0.42.5',
 
   local containers = k8sUtils.generateContainers(
     containerName=$.appName,

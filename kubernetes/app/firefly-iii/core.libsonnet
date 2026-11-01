@@ -14,7 +14,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
 
   local hosts = [k8sUtils.getServiceHostname(serviceName='finance')],
 
-  local containerImage = 'fireflyiii/core:version-6.4.2',
+  local containerImage = 'fireflyiii/core:version-6.7.9',
 
   local appEnv = std.prune([
     k8sUtils.generateEnv(name='APP_ENV', value='production'),

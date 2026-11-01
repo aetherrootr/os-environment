@@ -10,7 +10,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   databaseUser:: error ('databaseUser is required'),
   databasePasswordSecretName:: error ('databasePasswordSecretName is required'),
   port:: 8080,
-  image:: 'ghcr.io/open-webui/open-webui:v0.11.0',
+  image:: 'ghcr.io/open-webui/open-webui:v0.12.5',
   replicas:: 1,
 
   local certificateName = k8sUtils.getWildcardCertificateName(namespace=$.namespace),

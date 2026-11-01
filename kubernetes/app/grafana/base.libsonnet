@@ -9,7 +9,7 @@ local prometheusDatasource = importstr 'datasource/prometheus.yaml';
   port:: 3000,
   certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
-  local containerImage = 'grafana/grafana:12.0.2',
+  local containerImage = 'grafana/grafana:13.3.0',
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.appName)],
 
 
@@ -106,7 +106,9 @@ local prometheusDatasource = importstr 'datasource/prometheus.yaml';
         ],
       ),
       replicas=$.replicas,
-    ),
+    ) + {
+      spec+: { strategy: { type: 'Recreate' } },
+    },
     k8sUtils.generateIngress(
       namespace=$.namespace,
       appName=$.appName,

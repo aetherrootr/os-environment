@@ -17,6 +17,7 @@ Run commands in this README from the repository root.
 | Notification credentials | [`kubernetes/secrets/argocd-notifications-secret/env/prod.jsonnet`](../../secrets/argocd-notifications-secret/env/prod.jsonnet) | Maps the Fastmail SMTP app password from Bitwarden to `smtp-password` in `argocd-notifications-secret`. |
 | Certificate | [`kubernetes/certificates/corp.aetherrootr.com/namespaces/argocd.jsonnet`](../../certificates/corp.aetherrootr.com/namespaces/argocd.jsonnet) | Creates `argocd-wildcard-certificate`. cert-manager manages the TLS Secret `argocd-wildcard-certificate-tls`. |
 | Application | [`kubernetes/app/argocd/env/prod.jsonnet`](env/prod.jsonnet) | Includes the three CRDs, configuration, workloads, Services, NetworkPolicies and Ingress. RBAC and the core credentials are managed through the separate entries above. |
+| Workload Applications | [`kubernetes/app/argocd/apps/env/prod.jsonnet`](apps/env/prod.jsonnet) | Independently registers the workload AppProject and Applications. Initially includes `subconverter-prod`. |
 
 The application entry imports [base.libsonnet](base.libsonnet), which assembles these components:
 
@@ -81,7 +82,7 @@ Homebrew installs the version currently provided by its [argocd formula](https:/
 
 ## Email notifications
 
-Configure recipients by editing each Application's manifest in the Argo CD UI and adding [notification subscription annotations](https://argo-cd.readthedocs.io/en/stable/user-guide/subscriptions/), such as `notifications.argoproj.io/subscribe.on-sync-failed.email` and `notifications.argoproj.io/subscribe.on-health-degraded.email`, with recipient email addresses as their values. These manifests define no global subscriptions. The Bitwarden operator manages the notification Secret directly.
+Configure project recipients through `notificationEmails` in [apps/projects/os-environment/project.libsonnet](apps/projects/os-environment/project.libsonnet). The shared project template adds [notification subscription annotations](https://argo-cd.readthedocs.io/en/stable/operator-manual/notifications/subscriptions/) to the AppProject, applying subscriptions to all its Applications. The `os-environment` project subscribes `aether@aetherrootr.com` to all six triggers below; projects without recipients have no subscriptions. Override `notificationTriggers` in the project configuration to select fewer events. These manifests define no global subscriptions. The Bitwarden operator manages the notification Secret directly.
 
 | Trigger | Email event |
 | --- | --- |

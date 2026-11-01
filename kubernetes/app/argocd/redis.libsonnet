@@ -4,16 +4,6 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   namespace:: error 'namespace is required',
   appName:: 'argocd-redis',
   replicas:: 1,
-  resources:: {
-    requests: {
-      cpu: '100m',
-      memory: '128Mi',
-    },
-    limits: {
-      cpu: '500m',
-      memory: '256Mi',
-    },
-  },
 
   local appEnv = [
     k8sUtils.generateSecretEnv(
@@ -26,7 +16,16 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   local containers = k8sUtils.generateContainers(
     containerName='redis',
     image='public.ecr.aws/docker/library/redis:8.2.3-alpine',
-    resources=$.resources,
+    resources={
+      requests: {
+        cpu: '100m',
+        memory: '128Mi',
+      },
+      limits: {
+        cpu: '500m',
+        memory: '256Mi',
+      },
+    },
     args=[
       '--save',
       '',

@@ -5,16 +5,6 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   appName:: 'argocd-application-controller',
   image:: 'quay.io/argoproj/argocd:v3.5.6',
   replicas:: 1,
-  resources:: {
-    requests: {
-      cpu: '100m',
-      memory: '256Mi',
-    },
-    limits: {
-      cpu: '1000m',
-      memory: '1Gi',
-    },
-  },
 
   local parameterEnv = {
     GRPC_ENABLE_TXT_SERVICE_CONFIG: 'controller.grpc.enable.txt.service.config',
@@ -111,7 +101,16 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   local containers = k8sUtils.generateContainers(
     containerName='argocd-application-controller',
     image=$.image,
-    resources=$.resources,
+    resources={
+      requests: {
+        cpu: '100m',
+        memory: '256Mi',
+      },
+      limits: {
+        cpu: '1000m',
+        memory: '1Gi',
+      },
+    },
     args=[
       '/usr/local/bin/argocd-application-controller',
     ],

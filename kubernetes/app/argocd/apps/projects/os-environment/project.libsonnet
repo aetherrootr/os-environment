@@ -1,0 +1,48 @@
+{
+  projectName: 'os-environment',
+  repoURL: 'https://github.com/aetherrootr/os-environment.git',
+  apiServer: 'https://kubernetes.default.svc',
+  destinationNamespaces: [
+    'applications-and-services',
+    'infrastructure',
+    'cloudflare-tunnel',
+    'bitwarden-secrets-manager',
+    'cert-manager',
+    'kubernetes-dashboard',
+  ],
+  description: 'Repository applications; the Argo CD installation is managed independently',
+  // Only the cluster-scoped resources rendered by the registered applications.
+  clusterResourceWhitelist: [
+    { group: 'apiextensions.k8s.io', kind: 'CustomResourceDefinition', name: 'bitwardensecrets.k8s.bitwarden.com' },
+    { group: 'cert-manager.io', kind: 'ClusterIssuer', name: 'letsencrypt-dns-cloudflare' },
+    { group: 'rbac.authorization.k8s.io', kind: 'ClusterRole', name: 'bw-sm-op-sm-operator-manager-role' },
+    { group: 'rbac.authorization.k8s.io', kind: 'ClusterRole', name: 'bw-sm-op-sm-operator-metrics-reader' },
+    { group: 'rbac.authorization.k8s.io', kind: 'ClusterRole', name: 'bw-sm-op-sm-operator-proxy-role' },
+    { group: 'rbac.authorization.k8s.io', kind: 'ClusterRole', name: 'kube-monitor-kube-state-metrics' },
+    { group: 'rbac.authorization.k8s.io', kind: 'ClusterRoleBinding', name: 'bw-sm-op-sm-operator-manager-rolebinding' },
+    { group: 'rbac.authorization.k8s.io', kind: 'ClusterRoleBinding', name: 'bw-sm-op-sm-operator-proxy-rolebinding' },
+    { group: 'rbac.authorization.k8s.io', kind: 'ClusterRoleBinding', name: 'kube-monitor-kube-state-metrics' },
+  ],
+  namespaceResourceWhitelist: [
+    { group: '', kind: 'ConfigMap' },
+    { group: '', kind: 'Pod' },
+    { group: '', kind: 'Secret' },
+    { group: '', kind: 'Service' },
+    { group: '', kind: 'ServiceAccount' },
+    { group: 'apps', kind: 'Deployment' },
+    { group: 'apps', kind: 'StatefulSet' },
+    { group: 'batch', kind: 'CronJob' },
+    { group: 'crd.projectcalico.org', kind: 'NetworkPolicy' },
+    { group: 'k8s.bitwarden.com', kind: 'BitwardenSecret' },
+    { group: 'networking.k8s.io', kind: 'Ingress' },
+    { group: 'networking.k8s.io', kind: 'NetworkPolicy' },
+    { group: 'rbac.authorization.k8s.io', kind: 'Role' },
+    { group: 'rbac.authorization.k8s.io', kind: 'RoleBinding' },
+  ],
+  namespaceResourceBlacklist: [
+    { group: 'argoproj.io', kind: '*' },
+  ],
+  notificationEmails: [
+    'aether@aetherrootr.com',
+  ],
+}

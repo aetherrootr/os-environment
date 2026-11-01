@@ -3,10 +3,10 @@ local env = import 'common/inline-environments-base.libsonnet';
 
 env {
   namespace:: 'applications-and-services',
-  appName:: 'wikijs',
+  appName:: 'wikijs_v3',
 
   deployTarget: base {
     namespace: $.namespace,
-    appName: $.appName,
+    appName: std.strReplace($.appName, '_', '-'),
   },
 }

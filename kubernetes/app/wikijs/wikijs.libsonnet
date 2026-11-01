@@ -14,11 +14,11 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
 
   local hosts = [k8sUtils.getServiceHostname(serviceName='wiki')],
 
-  local containerImage = 'ghcr.io/requarks/wiki:2.5.312',
+  local containerImage = 'ghcr.io/requarks/wiki:3.0.1',
   local initContainerImage = 'busybox:1.35.0',
 
   local appEnv = std.prune([
-    k8sUtils.generateEnv(name='DB_TYPE', value='postgres'),
+    k8sUtils.generateEnv(name='DB_SCHEMA', value='wiki'),
     k8sUtils.generateEnv(name='DB_HOST', value=$.databaseHost),
     k8sUtils.generateEnv(name='DB_PORT', value=std.toString($.databasePort)),
     k8sUtils.generateEnv(name='DB_NAME', value=$.databaseName),
@@ -35,23 +35,33 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
     ],
     resources={
       requests: {
-        cpu: '100m',
-        memory: '256Mi',
+        cpu: '250m',
+        memory: '512Mi',
       },
       limits: {
-        cpu: '500m',
-        memory: '512Mi',
+        cpu: '1000m',
+        memory: '1536Mi',
       },
     },
     env=appEnv,
     volumeMounts=[
       k8sUtils.generateVolumeMount(
         name=$.appName + '-config-pvc',
-        mountPath='/token',
-        subPath=std.strReplace($.appName + '/token', '-', '_'),
+        mountPath='/wiki/data',
+        subPath=std.strReplace($.appName + '/app', '-', '_'),
       ),
     ],
-  ),
+  ) + {
+    startupProbe: {
+      tcpSocket: { port: 'http' },
+      periodSeconds: 5,
+      failureThreshold: 60,
+    },
+    readinessProbe: {
+      tcpSocket: { port: 'http' },
+      periodSeconds: 5,
+    },
+  },
 
   wikijs: std.prune([
     k8sUtils.generateService(
@@ -79,29 +89,58 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
         ],
         initContainers=[
           k8sUtils.generateContainers(
-            containerName='wait-for-postgres',
+            containerName='prepare-data',
             image=initContainerImage,
-            command=['/bin/sh', '-c'],
+            command=['sh', '-ec'],
+            args=['mkdir -p /data/app; chown 1000:1000 /data/app; chmod 0700 /data/app'],
+            resources={
+              requests: { cpu: '10m', memory: '16Mi' },
+              limits: { cpu: '100m', memory: '32Mi' },
+            },
+            volumeMounts=[
+              k8sUtils.generateVolumeMount(
+                name=$.appName + '-config-pvc',
+                mountPath='/data',
+                subPath=std.strReplace($.appName, '-', '_'),
+              ),
+            ],
+          ),
+          k8sUtils.generateContainers(
+            containerName='wait-for-postgres',
+            image='postgres:17-alpine',
+            command=['sh', '-ec'],
             args=[
-              'until nc -z ' + $.databaseHost + ' ' + std.toString($.databasePort) +
-              '; do echo waiting for ' + $.databaseHost + ':' + std.toString($.databasePort) +
-              '; sleep 2; done',
+              |||
+                until pg_isready "$@"; do sleep 2; done
+                if [ "$(psql "$@" --no-password -XAtv ON_ERROR_STOP=1 -c 'SELECT EXISTS (SELECT 1 FROM wiki.users WHERE NOT "isSystem")')" != t ]; then
+                  echo 'A migrated Wiki.js 3 database with existing users is required.' >&2
+                  exit 1
+                fi
+              |||,
+              '--', '-h', $.databaseHost,
+              '-p', std.toString($.databasePort),
+              '-U', $.databaseUser, '-d', $.databaseName,
+            ],
+            env=[
+              k8sUtils.generateSecretEnv(name='PGPASSWORD', secretName=$.databasePasswordSecretName, key='password'),
             ],
             resources={
               requests: {
                 cpu: '10m',
-                memory: '10Mi',
+                memory: '16Mi',
               },
               limits: {
-                cpu: '10m',
-                memory: '10Mi',
+                cpu: '100m',
+                memory: '32Mi',
               },
             },
           ),
         ],
       ),
       replicas=$.replicas,
-    ),
+    ) + {
+      spec+: { strategy: { type: 'Recreate' } },
+    },
     k8sUtils.generateIngress(
       namespace=$.namespace,
       appName=$.appName,

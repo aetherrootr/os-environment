@@ -90,7 +90,9 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
         ],
       ),
       replicas=$.replicas,
-    ),
+    ) + {
+      spec+: { strategy: { type: 'Recreate' } },
+    },
     k8sUtils.generateIngress(
       namespace=$.namespace,
       appName=$.appName,

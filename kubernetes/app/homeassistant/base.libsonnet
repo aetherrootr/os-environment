@@ -10,7 +10,7 @@ local homeassistantConfig = importstr 'config/configuration.yaml';
   certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
   urlPrefix:: 'ha',
 
-  local containerImage = 'ghcr.io/home-assistant/home-assistant:2026.4.2',
+  local containerImage = 'ghcr.io/home-assistant/home-assistant:2026.10.4',
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.urlPrefix)],
 
   local containers = k8sUtils.generateContainers(
@@ -119,7 +119,9 @@ local homeassistantConfig = importstr 'config/configuration.yaml';
         hostNetwork=true,
       ),
       replicas=$.replicas,
-    ),
+    ) + {
+      spec+: { strategy: { type: 'Recreate' } },
+    },
     k8sUtils.generateIngress(
       namespace=$.namespace,
       appName=$.appName,

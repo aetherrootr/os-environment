@@ -7,7 +7,7 @@ local postgresBackup = import 'utils/postgres-backup.libsonnet';
 {
   namespace:: error ('namespace is required'),
   appName:: error ('appName is required'),
-  immichVersion:: 'v2.7.4',
+  immichVersion:: 'v3.3.5',
   postgresDatabaseHost:: $.appName + '-postgresdb',
   postgresDatabasePort:: 5432,
   postgresDatabaseName:: $.appName,

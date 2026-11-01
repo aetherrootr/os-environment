@@ -3,6 +3,10 @@
     "path": "wikijs",
     "excludes": ["/data/**"]
   },
+  {
+    "path": "wikijs_v3",
+    "excludes": ["/data/**"]
+  },
   { "path": "filebrowser" },
   { "path": "golinks" },
   {

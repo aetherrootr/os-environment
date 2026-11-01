@@ -8,5 +8,6 @@ env {
   deployTarget: base {
     namespace: $.namespace,
     appName: $.appName,
+    activeVersion: 'v3',
   },
 }

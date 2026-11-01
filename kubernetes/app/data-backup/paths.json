@@ -1,6 +1,6 @@
 [
   {
-    "path": "wikijs",
+    "path": "wikijs_v3",
     "excludes": ["/data/**"]
   },
   { "path": "filebrowser" },

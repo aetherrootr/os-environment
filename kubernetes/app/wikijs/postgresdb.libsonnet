@@ -11,7 +11,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   replicas:: 1,
   certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
-  local containerImage = 'postgres:15-alpine',
+  local containerImage = 'postgres:17-alpine',
 
   local appEnv = std.prune([
     k8sUtils.generateEnv(name='POSTGRES_DB', value=$.databaseName),
@@ -44,7 +44,13 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
         subPath=std.strReplace($.appName + '/data', '-', '_'),
       ),
     ],
-  ),
+  ) + {
+    readinessProbe: {
+      exec: { command: ['pg_isready', '-U', $.databaseUser, '-d', $.databaseName] },
+      initialDelaySeconds: 5,
+      periodSeconds: 5,
+    },
+  },
 
   postgresdb: std.prune([
     k8sUtils.generateService(

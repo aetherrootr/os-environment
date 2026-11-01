@@ -7,6 +7,10 @@
   environment:: 'env/prod.jsonnet',
   targetRevision:: 'master',
   automated:: true,
+  syncOptions:: [
+    'FailOnSharedResource=true',
+  ],
+  ignoreDifferences:: [],
 
   assert std.startsWith($.appPath, 'kubernetes/app/') &&
          $.appPath != 'kubernetes/app/argocd' &&
@@ -53,9 +57,7 @@
         selfHeal: false,
         allowEmpty: false,
       },
-      syncOptions: [
-        'FailOnSharedResource=true',
-      ],
+      syncOptions: $.syncOptions,
       retry: {
         limit: 3,
         backoff: {
@@ -65,5 +67,7 @@
         },
       },
     },
-  },
+  } + (if std.length($.ignoreDifferences) > 0 then {
+         ignoreDifferences: $.ignoreDifferences,
+       } else {}),
 }

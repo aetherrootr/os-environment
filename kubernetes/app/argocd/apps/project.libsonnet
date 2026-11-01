@@ -5,6 +5,14 @@
   apiServer:: 'https://kubernetes.default.svc',
   destinationNamespaces:: error 'destinationNamespaces is required',
   description:: '',
+  clusterResourceWhitelist:: [],
+  namespaceResourceWhitelist:: [],
+  namespaceResourceBlacklist:: [
+    { group: 'argoproj.io', kind: '*' },
+    { group: 'rbac.authorization.k8s.io', kind: '*' },
+    { group: '', kind: 'Secret' },
+    { group: 'k8s.bitwarden.com', kind: '*' },
+  ],
   notificationEmails:: [],
   notificationTriggers:: [
     'on-sync-running',
@@ -40,12 +48,8 @@
       }
       for namespace in $.destinationNamespaces
     ],
-    clusterResourceWhitelist: [],
-    namespaceResourceBlacklist: [
-      { group: 'argoproj.io', kind: '*' },
-      { group: 'rbac.authorization.k8s.io', kind: '*' },
-      { group: '', kind: 'Secret' },
-      { group: 'k8s.bitwarden.com', kind: '*' },
-    ],
+    clusterResourceWhitelist: $.clusterResourceWhitelist,
+    namespaceResourceWhitelist: $.namespaceResourceWhitelist,
+    namespaceResourceBlacklist: $.namespaceResourceBlacklist,
   },
 }

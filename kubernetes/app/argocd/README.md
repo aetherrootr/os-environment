@@ -17,7 +17,7 @@ Run commands in this README from the repository root.
 | Notification credentials | [`kubernetes/secrets/argocd-notifications-secret/env/prod.jsonnet`](../../secrets/argocd-notifications-secret/env/prod.jsonnet) | Maps the Fastmail SMTP app password from Bitwarden to `smtp-password` in `argocd-notifications-secret`. |
 | Certificate | [`kubernetes/certificates/corp.aetherrootr.com/namespaces/argocd.jsonnet`](../../certificates/corp.aetherrootr.com/namespaces/argocd.jsonnet) | Creates `argocd-wildcard-certificate`. cert-manager manages the TLS Secret `argocd-wildcard-certificate-tls`. |
 | Application | [`kubernetes/app/argocd/env/prod.jsonnet`](env/prod.jsonnet) | Includes the three CRDs, configuration, workloads, Services, NetworkPolicies and Ingress. RBAC and the core credentials are managed through the separate entries above. |
-| Workload Applications | [`kubernetes/app/argocd/apps/env/prod.jsonnet`](apps/env/prod.jsonnet) | Independently registers the workload AppProject and Applications. Initially includes `subconverter-prod`. |
+| Workload Applications | [`kubernetes/app/argocd/apps/env/prod.jsonnet`](apps/env/prod.jsonnet) | Independently registers application environments under `kubernetes/app`, excluding Argo CD. |
 
 The application entry imports [base.libsonnet](base.libsonnet), which assembles these components:
 
@@ -138,6 +138,41 @@ argocd login argocd.corp.aetherrootr.com --grpc-web
 # These installation manifests include Tanka rendering support but do not
 # register applications or configure automatic synchronization.
 ```
+
+## Workload Application registration
+
+[apps/projects/os-environment/apps.libsonnet](apps/projects/os-environment/apps.libsonnet)
+contains the application dictionaries. Each existing production entry under
+`kubernetes/app` has one Application, including the individual Authentik outposts
+and Prometheus environments. Argo CD and its own application registration entry
+are excluded. The controller installation and workload registration remain
+independent Tanka entries.
+
+The project includes Bitwarden Secrets Manager, the Let's Encrypt ClusterIssuer,
+Kubernetes Dashboard and kube-state-metrics. Its allowed namespaces and namespaced
+resource kinds match the registered applications. Cluster-scoped permissions are
+restricted to the exact names of the required CRD, ClusterIssuer, ClusterRoles and
+ClusterRoleBindings; the `argocd` namespace and Argo CD resource kinds remain denied.
+Namespaces, storage, independently maintained credentials, certificates and RBAC
+referenced by workloads must already exist.
+
+Applications track remote `master`. Merge changes to workload dependencies and
+lock files before registering the new Applications, then run from the repository
+root:
+
+```bash
+tk diff kubernetes/app/argocd/apps/env/prod.jsonnet
+tk apply kubernetes/app/argocd/apps/env/prod.jsonnet
+kubectl -n argocd get applications
+```
+
+Applying this entry starts automatic synchronization of all registered applications.
+Automatic pruning and self-healing remain disabled. Applications inherit the
+project's email subscriptions. Jitsi ignores existing Secret data and the related
+secret checksum annotations on its Jicofo/JVB Deployments during both diff and
+synchronization because its chart generates random passwords when rendered.
+Credential changes therefore require a separate deliberate update and workload
+restart.
 
 ## Upgrades
 

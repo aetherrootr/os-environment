@@ -8,7 +8,7 @@ local sqliteBackup = import 'utils/sqlite-backup.libsonnet';
   port:: 5244,
   certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
-  local containerImage = 'openlistteam/openlist:v4.1.9-aio',
+  local containerImage = 'openlistteam/openlist:v4.2.9-aio',
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.appName)],
 
 

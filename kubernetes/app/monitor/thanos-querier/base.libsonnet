@@ -8,7 +8,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   grpcPort:: 10901,
   certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
-  local containerImage = 'thanosio/thanos:v0.38.0',
+  local containerImage = 'thanosio/thanos:v0.42.5',
   local hosts = [k8sUtils.getServiceHostname(serviceName='prometheus')],
 
   local containers = k8sUtils.generateContainers(

@@ -17,6 +17,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   image:: 'quay.io/argoproj/argocd:v3.5.6',
   hostname:: k8sUtils.getServiceHostname(serviceName='argocd'),
   notificationEmailUsername:: error 'notificationEmailUsername is required',
+  notificationEmailFrom:: error 'notificationEmailFrom is required',
 
   local configResources = config {
     namespace: $.namespace,
@@ -48,6 +49,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
     namespace: $.namespace,
     hostname: $.hostname,
     emailUsername: $.notificationEmailUsername,
+    emailFrom: $.notificationEmailFrom,
   },
 
   local redisResources = redis {

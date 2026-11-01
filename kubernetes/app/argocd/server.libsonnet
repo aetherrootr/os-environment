@@ -5,16 +5,6 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   appName:: 'argocd-server',
   image:: 'quay.io/argoproj/argocd:v3.5.6',
   replicas:: 1,
-  resources:: {
-    requests: {
-      cpu: '100m',
-      memory: '128Mi',
-    },
-    limits: {
-      cpu: '500m',
-      memory: '512Mi',
-    },
-  },
   hostname:: k8sUtils.getServiceHostname('argocd'),
   certificateName:: k8sUtils.getWildcardCertificateName($.namespace),
 
@@ -96,7 +86,16 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   local containers = k8sUtils.generateContainers(
     containerName='argocd-server',
     image=$.image,
-    resources=$.resources,
+    resources={
+      requests: {
+        cpu: '100m',
+        memory: '128Mi',
+      },
+      limits: {
+        cpu: '500m',
+        memory: '512Mi',
+      },
+    },
     args=[
       '/usr/local/bin/argocd-server',
     ],

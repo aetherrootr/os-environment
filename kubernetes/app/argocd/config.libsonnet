@@ -137,7 +137,11 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       namespace=$.namespace,
       appName='argocd-cmd-params-cm',
       // TLS terminates at NGINX; Bitwarden operator manages argocd-secret.
-      data={ 'server.insecure': 'true' },
+      data={
+        'server.insecure': 'true',
+        'controller.repo.server.timeout.seconds': '240',
+        'server.repo.server.timeout.seconds': '240',
+      },
       labels={
         'app.kubernetes.io/name': 'argocd-cmd-params-cm',
         'app.kubernetes.io/part-of': 'argocd',

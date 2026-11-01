@@ -1,20 +1,12 @@
 local k8sUtils = import 'utils/k8s-utils.libsonnet';
+local tanka = import 'plugins/tanka/base.libsonnet';
 
 {
   namespace:: error 'namespace is required',
   appName:: 'argocd-repo-server',
   image:: 'quay.io/argoproj/argocd:v3.5.6',
   replicas:: 1,
-  resources:: {
-    requests: {
-      cpu: '100m',
-      memory: '256Mi',
-    },
-    limits: {
-      cpu: '1000m',
-      memory: '1Gi',
-    },
-  },
+  local tankaPlugin = tanka { namespace: $.namespace },
 
   local parameterEnv = {
     GRPC_ENABLE_TXT_SERVICE_CONFIG: 'reposerver.grpc.enable.txt.service.config',
@@ -92,7 +84,16 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   local containers = k8sUtils.generateContainers(
     containerName='argocd-repo-server',
     image=$.image,
-    resources=$.resources,
+    resources={
+      requests: {
+        cpu: '100m',
+        memory: '256Mi',
+      },
+      limits: {
+        cpu: '1000m',
+        memory: '1Gi',
+      },
+    },
     args=[
       '/usr/local/bin/argocd-repo-server',
     ],
@@ -187,7 +188,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       'kubernetes.io/os': 'linux',
     },
     serviceAccountName='argocd-repo-server',
-    volumes=[
+    volumes=tankaPlugin.podSpec.volumes + [
       k8sUtils.generateConfigMapVolume(
         name='ssh-known-hosts',
         configMapName='argocd-ssh-known-hosts-cm',
@@ -331,6 +332,10 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       },
     },
     automountServiceAccountToken: false,
+    securityContext: {
+      fsGroup: 999,
+      fsGroupChangePolicy: 'OnRootMismatch',
+    },
   },
 
   repoServer: [
@@ -361,9 +366,12 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
     k8sUtils.generateDeployment(
       namespace=$.namespace,
       appName=$.appName,
-      containers=containers,
+      containers=[containers] + tankaPlugin.containers,
       podSpec=podSpec,
       replicas=$.replicas,
+      annotations={
+        'checksum/tanka-cmp': std.md5(std.manifestJson(tankaPlugin.config[0].data)),
+      },
       extraLabels={
         'app.kubernetes.io/component': 'repo-server',
         'app.kubernetes.io/name': 'argocd-repo-server',

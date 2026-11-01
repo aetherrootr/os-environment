@@ -24,6 +24,7 @@ The application entry imports [base.libsonnet](base.libsonnet), which assembles 
 | --- | --- |
 | [server.libsonnet](server.libsonnet) | API server, web UI, metrics Service and Ingress |
 | [repo-server.libsonnet](repo-server.libsonnet) | Repository access and manifest generation |
+| [plugins/tanka/base.libsonnet](plugins/tanka/base.libsonnet) | Tanka config-management plugin configuration, sidecar and volumes |
 | [application-controller.libsonnet](application-controller.libsonnet) | StatefulSet that reconciles applications |
 | [applicationset-controller.libsonnet](applicationset-controller.libsonnet) | Generates applications from ApplicationSets |
 | [redis.libsonnet](redis.libsonnet) | Redis cache using the Bitwarden-managed `argocd-redis` Secret |
@@ -133,9 +134,8 @@ tk apply kubernetes/app/argocd/env/prod.jsonnet
 argocd login argocd.corp.aetherrootr.com --grpc-web
 
 # Configure repository credentials, projects and applications separately.
-# These installation manifests do not enable automatic application synchronization.
-# Repository env/prod.jsonnet files return Tanka Environment wrappers; managing
-# them through Argo CD requires a Kubernetes resource entry or a Tanka plugin.
+# These installation manifests include Tanka rendering support but do not
+# register applications or configure automatic synchronization.
 ```
 
 ## Upgrades

@@ -9,6 +9,7 @@ local notifications = import 'notifications.libsonnet';
 local redis = import 'redis.libsonnet';
 local repoServer = import 'repo-server.libsonnet';
 local server = import 'server.libsonnet';
+local tanka = import 'plugins/tanka/base.libsonnet';
 local k8sUtils = import 'utils/k8s-utils.libsonnet';
 
 {
@@ -21,6 +22,8 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
     namespace: $.namespace,
     hostname: $.hostname,
   },
+
+  local tankaResources = tanka { namespace: $.namespace },
 
   local networkPolicyResources = networkPolicy {
     namespace: $.namespace,
@@ -73,6 +76,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   // Recursive std.prune would remove these meaningful empty objects.
   items: crds.crds
          + configResources.config
+         + tankaResources.config
          + networkPolicyResources.networkPolicy
          + applicationsetControllerResources.applicationsetController
          + dexServerResources.dexServer

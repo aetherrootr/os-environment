@@ -5,16 +5,6 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   appName:: 'argocd-notifications-controller',
   image:: 'quay.io/argoproj/argocd:v3.5.6',
   replicas:: 1,
-  resources:: {
-    requests: {
-      cpu: '50m',
-      memory: '64Mi',
-    },
-    limits: {
-      cpu: '200m',
-      memory: '128Mi',
-    },
-  },
 
   local parameterEnv = {
     ARGOCD_NOTIFICATIONS_CONTROLLER_LOGFORMAT: 'notificationscontroller.log.format',
@@ -38,7 +28,16 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   local containers = k8sUtils.generateContainers(
     containerName='argocd-notifications-controller',
     image=$.image,
-    resources=$.resources,
+    resources={
+      requests: {
+        cpu: '50m',
+        memory: '64Mi',
+      },
+      limits: {
+        cpu: '200m',
+        memory: '128Mi',
+      },
+    },
     args=[
       '/usr/local/bin/argocd-notifications',
     ],

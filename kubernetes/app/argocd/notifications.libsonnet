@@ -4,6 +4,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   namespace:: error 'namespace is required',
   hostname:: k8sUtils.getServiceHostname('argocd'),
   emailUsername:: error 'emailUsername is required',
+  emailFrom:: error 'emailFrom is required',
 
   notifications: [
     k8sUtils.generateConfigMap(
@@ -15,7 +16,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
           host: 'smtp.fastmail.com',
           port: 465,
           username: $.emailUsername,
-          from: $.emailUsername,
+          from: $.emailFrom,
           password: '$smtp-password',
           html: false,
           insecure_skip_verify: false,

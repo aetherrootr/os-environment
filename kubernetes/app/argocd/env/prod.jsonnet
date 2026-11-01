@@ -10,6 +10,7 @@ env {
 
   deployTarget: base {
     namespace: $.namespace,
-    notificationEmailUsername: 'argocd@aetherrootr.com',
+    notificationEmailUsername: 'aether@aetherrootr.com',
+    notificationEmailFrom: 'argocd@aetherrootr.com',
   },
 }

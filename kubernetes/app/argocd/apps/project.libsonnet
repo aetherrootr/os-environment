@@ -1,3 +1,5 @@
+local argoUtils = import 'utils/argo-utils.libsonnet';
+
 {
   namespace:: error 'namespace is required',
   projectName:: error 'projectName is required',
@@ -24,32 +26,27 @@
   ],
 
   assert !std.member($.destinationNamespaces, $.namespace) :
-    'Workload projects must not target the Argo CD namespace',
+         'Workload projects must not target the Argo CD namespace',
 
-  apiVersion: 'argoproj.io/v1alpha1',
-  kind: 'AppProject',
-  metadata: {
-    name: $.projectName,
-    namespace: $.namespace,
-  } + (if std.length($.notificationEmails) > 0 then {
-         annotations: {
-           ['notifications.argoproj.io/subscribe.' + trigger + '.email']:
-             std.join(';', $.notificationEmails)
-           for trigger in $.notificationTriggers
-         },
-       } else {}),
-  spec: {
-    description: $.description,
-    sourceRepos: [$.repoURL],
-    destinations: [
+  appProject: argoUtils.generateAppProject(
+    namespace=$.namespace,
+    projectName=$.projectName,
+    sourceRepos=[$.repoURL],
+    destinations=[
       {
         server: $.apiServer,
         namespace: namespace,
       }
       for namespace in $.destinationNamespaces
     ],
-    clusterResourceWhitelist: $.clusterResourceWhitelist,
-    namespaceResourceWhitelist: $.namespaceResourceWhitelist,
-    namespaceResourceBlacklist: $.namespaceResourceBlacklist,
-  },
+    clusterResourceWhitelist=$.clusterResourceWhitelist,
+    namespaceResourceWhitelist=$.namespaceResourceWhitelist,
+    namespaceResourceBlacklist=$.namespaceResourceBlacklist,
+    description=$.description,
+    annotations=if std.length($.notificationEmails) > 0 then {
+      ['notifications.argoproj.io/subscribe.' + trigger + '.email']:
+        std.join(';', $.notificationEmails)
+      for trigger in $.notificationTriggers
+    } else {},
+  ),
 }

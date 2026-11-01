@@ -33,6 +33,7 @@
     { group: 'apps', kind: 'StatefulSet' },
     { group: 'batch', kind: 'CronJob' },
     { group: 'crd.projectcalico.org', kind: 'NetworkPolicy' },
+    { group: 'k8s.bitwarden.com', kind: 'BitwardenSecret' },
     { group: 'networking.k8s.io', kind: 'Ingress' },
     { group: 'networking.k8s.io', kind: 'NetworkPolicy' },
     { group: 'rbac.authorization.k8s.io', kind: 'Role' },
@@ -40,7 +41,6 @@
   ],
   namespaceResourceBlacklist: [
     { group: 'argoproj.io', kind: '*' },
-    { group: 'k8s.bitwarden.com', kind: '*' },
   ],
   notificationEmails: [
     'aether@aetherrootr.com',

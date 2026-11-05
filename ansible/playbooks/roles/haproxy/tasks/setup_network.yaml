@@ -8,6 +8,7 @@
 - name: apply netplan
   command: netplan apply
 
+# Keep management SSH on .205; .206:22 is reserved for Gitea via HAProxy.
 - name: Configure sshd
   lineinfile:
     path: /etc/ssh/sshd_config

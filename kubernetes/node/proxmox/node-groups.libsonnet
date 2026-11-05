@@ -4,9 +4,20 @@
       bluetooth: 'exist',
       gpu: 'intel',
       'service-data-mount': 'true',
+      // Eligible for NFS-backed databases; this VM resides on the storage host.
+      service_data_database: 'true',
     },
     nodeNames: [
       'k8s-node-1',
+    ],
+  },
+  {
+    labels: {
+      bluetooth: 'none',
+      gpu: 'none',
+    },
+    nodeNames: [
+      'k8s-node-2',
     ],
   },
   {

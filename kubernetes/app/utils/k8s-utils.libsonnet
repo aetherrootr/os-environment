@@ -99,6 +99,23 @@ local tankaUtils = import 'common/lib/tanka-utils.libsonnet';
       },
     },
 
+  generateRequiredNodeAffinity(labels): {
+    nodeAffinity: {
+      requiredDuringSchedulingIgnoredDuringExecution: {
+        nodeSelectorTerms: [{
+          matchExpressions: [
+            {
+              key: key,
+              operator: 'In',
+              values: [labels[key]],
+            }
+            for key in std.objectFields(labels)
+          ],
+        }],
+      },
+    },
+  },
+
   generatePodSpec(
     volumes=null,
     restartPolicy='Always',
@@ -108,13 +125,15 @@ local tankaUtils = import 'common/lib/tanka-utils.libsonnet';
     dnsPolicy='ClusterFirst',
     serviceAccountName=null,
     hostNetwork=false,
-    tolerations=null
+    tolerations=null,
+    affinity=null
   ):
     $.tk.podSpec.withRestartPolicy(restartPolicy)
     + $.tk.podSpec.withDnsPolicy(dnsPolicy)
     + (if volumes != null then $.tk.podSpec.withVolumes(volumes) else {})
     + (if initContainers != null then $.tk.podSpec.withInitContainers(initContainers) else {})
     + (if nodeSelector != null then $.tk.podSpec.withNodeSelector(nodeSelector) else {})
+    + (if affinity != null then { affinity: affinity } else {})
     + (if nodeName != null then $.tk.podSpec.withNodeName(nodeName) else {})
     + (if serviceAccountName != null then $.tk.podSpec.withServiceAccountName(serviceAccountName) else {})
     + (if hostNetwork == true then $.tk.podSpec.withHostNetwork(hostNetwork) else {})

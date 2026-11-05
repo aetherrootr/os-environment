@@ -4,7 +4,9 @@ network:
     enp6s18:
       dhcp4: false
       addresses:
+        # Management SSH address; sshd listens only on this IP.
         - 192.168.8.205/24
+        # Separate Gitea SSH address so HAProxy can also use port 22.
         - 192.168.8.206/24
       routes:
         - to: 0.0.0.0/0

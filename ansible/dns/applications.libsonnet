@@ -17,7 +17,8 @@ local k8sEdgeRouter = 'edge-router.corp.aetherrootr.com';
   dnsUtils.generateDNSAlias('meet.corp.aetherrootr.com', k8sEdgeRouter),
   dnsUtils.generateDNSAlias('bazarr.corp.aetherrootr.com', k8sEdgeRouter),
   dnsUtils.generateDNSAlias('jackett.corp.aetherrootr.com', k8sEdgeRouter),
-  dnsUtils.generateDNSAlias('gitea.corp.aetherrootr.com', k8sEdgeRouter),
+  // Use HAProxy's Gitea SSH address (.206:22), separate from management SSH (.205:22).
+  dnsUtils.generateDNSRecord('gitea.corp.aetherrootr.com', '192.168.8.206'),
 
   // Resolve the public Authentik domain through the internal ingress on the LAN.
   dnsUtils.generateDNSAlias('authentik.aetherrootr.com', k8sEdgeRouter),

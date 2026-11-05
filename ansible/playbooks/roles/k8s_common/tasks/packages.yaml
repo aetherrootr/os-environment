@@ -6,6 +6,10 @@
       - k8s_package_names | length > 0
     fail_msg: k8s_package_version and k8s_package_names are required.
 
+- name: Read installed packages before installation
+  ansible.builtin.package_facts:
+    manager: apt
+
 - name: Install and re-hold Kubernetes packages
   block:
     - name: Unhold Kubernetes packages
@@ -13,6 +17,7 @@
         name: "{{ item }}"
         selection: install
       loop: "{{ k8s_package_names }}"
+      when: item in ansible_facts.packages
 
     - name: Install exact Kubernetes packages
       ansible.builtin.apt:
@@ -39,8 +44,13 @@
         k8s_installed_packages.stdout !=
         (k8s_package_version | regex_replace('^v', '')) + k8s_package_revision
   always:
+    - name: Refresh installed packages after the installation attempt
+      ansible.builtin.package_facts:
+        manager: apt
+
     - name: Hold Kubernetes packages
       ansible.builtin.dpkg_selections:
         name: "{{ item }}"
         selection: hold
       loop: "{{ k8s_package_names }}"
+      when: item in ansible_facts.packages

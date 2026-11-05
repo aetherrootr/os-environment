@@ -48,6 +48,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       appName=$.redisDatabaseHost,
       containers=containers,
       podSpec=k8sUtils.generatePodSpec(
+        affinity=k8sUtils.generateRequiredNodeAffinity({ service_data_database: 'true' }),
         volumes=[
           {
             name: $.appName + '-data-pvc',

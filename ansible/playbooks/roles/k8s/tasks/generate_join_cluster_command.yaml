@@ -1,6 +1,13 @@
 ---
 - name: Generate join cluster command
-  command: "sudo kubeadm token create --print-join-command"
+  ansible.builtin.command:
+    argv:
+      - kubeadm
+      - token
+      - create
+      - --kubeconfig
+      - "{{ k8s_kubeconfig | default('/etc/kubernetes/admin.conf') }}"
+      - --print-join-command
   register: generate_join_cluster_command_output
 
 - name: Write output to file

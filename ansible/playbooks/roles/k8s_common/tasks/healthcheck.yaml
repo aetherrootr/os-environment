@@ -1,4 +1,17 @@
 ---
+- name: Wait for all nodes to become ready
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - --kubeconfig
+      - "{{ k8s_kubeconfig }}"
+      - wait
+      - --for=condition=Ready
+      - nodes
+      - --all
+      - --timeout=5m
+  changed_when: false
+
 - name: Read node versions
   ansible.builtin.command:
     argv:

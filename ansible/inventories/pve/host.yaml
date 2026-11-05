@@ -19,6 +19,11 @@ all:
                 ansible_ssh_user: 'aether'
               hosts:
                 vm-server-1.corp.aetherrootr.com
+            k8s-node-2:
+              vars:
+                ansible_ssh_user: 'aether'
+              hosts:
+                k8s-node-2.corp.aetherrootr.com
     edge-router:
       vars:
         ansible_ssh_user: 'aether'

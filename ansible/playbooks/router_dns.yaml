@@ -1,0 +1,8 @@
+---
+- name: Update router DNS configuration
+  hosts: gl_mt6000
+  gather_facts: false
+  become: false
+  roles:
+    - role: router_dns
+      tags: [dns]

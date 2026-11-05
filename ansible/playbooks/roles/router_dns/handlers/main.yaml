@@ -1,0 +1,6 @@
+---
+- name: Restart dnsmasq
+  ansible.builtin.raw: /etc/init.d/dnsmasq restart
+  args:
+    executable: /bin/sh
+  when: not ansible_check_mode

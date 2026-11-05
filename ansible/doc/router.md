@@ -1,30 +1,45 @@
-# Soft router
+# GL-MT6000
 
----
+Update DNS on `192.168.8.1` through `playbooks/router_dns.yaml`.
+The general router entry point is `playbooks/router_gl_mt6000.yaml`.
+Run commands from the repository's `ansible/` directory with Ansible and `tk`
+installed. For SSH key authentication, set `ANSIBLE_ASK_PASS=false`.
 
-## Overview
-Deploying soft routers in the private sector is a measure to improve the Internet experience. Currently we have chosen the soft routing solution provided by [gl.inet](https://www.gl-inet.com/), we have chosen two models of routers [gl-axt1800](https://www.gl-inet.com/products/gl-axt1800/) and [gl-a1300](https://www.gl-inet.com/products/gl-a1300/). We deployed openclash on the soft router to bypass GFW's censorship and golinks to provide Google-like go/links services.
+## Configure DNS
 
-## Set for gl-axt1800
+Edit the appropriate file:
 
-Run the command to deploy golinks and openclash on the soft route:
+- `dns/nodes.libsonnet`: server addresses.
+- `dns/applications.libsonnet`: application domains.
+- `dns/storages.libsonnet`: storage endpoints.
 
+Use `generateDNSRecord` for IPv4 or IPv6 addresses and `generateDNSAlias` for
+aliases to fully qualified names defined by local records or other aliases:
+
+```jsonnet
+dnsUtils.generateDNSRecord('node.example.com', '192.168.8.205'),
+dnsUtils.generateDNSAlias('app.example.com', 'node.example.com'),
 ```
-ansible-playbook -i inventories/router/ playbooks/router_gl_axt1800.yaml -u root --ask-become-pass
+
+Both functions keep the declared name and its subdomains local. Missing types
+(such as AAAA for an IPv4-only node) are answered without upstream queries.
+Public names use the same alias function to resolve through the internal ingress:
+
+```jsonnet
+dnsUtils.generateDNSAlias('authentik.aetherrootr.com', 'edge-router.corp.aetherrootr.com'),
 ```
 
-## Set for gl-a1300
+Add new record files to the imports and combined array in `dns/config.jsonnet`.
+Change shared defaults in `dns/utils.libsonnet`.
 
-Run the command to deploy golinks and openclash on the soft route:
+```sh
+# Render locally.
+tk eval dns/config.jsonnet
 
-```
-ansible-playbook -i inventories/router/ playbooks/router_gl_a1300.yaml -u root --ask-become-pass
+# Apply DNS configuration (replaces /etc/dnsmasq.conf).
+ansible-playbook -i inventories/router/host.yaml playbooks/router_dns.yaml \
+  --diff
 ```
 
-## Remove CN restrictions (very dangerous)
-
-```
-echo "US" |dd of=/dev/mtdblock8 bs=1 seek=152
-sync
-reboot
-```
+To use standalone Jsonnet instead of `tk`, add
+`-e '{"dns_jsonnet_command": ["jsonnet"]}'`.

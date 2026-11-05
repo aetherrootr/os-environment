@@ -1,0 +1,65 @@
+---
+- name: Render authoritative DNS configuration on the controller
+  ansible.builtin.command:
+    argv: "{{ dns_jsonnet_command + [dns_jsonnet_file] }}"
+  delegate_to: localhost
+  become: false
+  vars:
+    ansible_python_interpreter: "{{ ansible_playbook_python }}"
+  register: dns_rendered
+  changed_when: false
+  check_mode: false
+
+- name: Deploy DNS configuration without remote Python
+  block:
+    - name: Create a local deployment script
+      ansible.builtin.tempfile:
+        state: file
+        suffix: .router-dns.sh
+      register: dns_script
+      delegate_to: localhost
+      become: false
+      vars:
+        ansible_python_interpreter: "{{ ansible_playbook_python }}"
+      changed_when: false
+      check_mode: false
+
+    - name: Prepare the deployment script
+      ansible.builtin.template:
+        src: deploy.sh.j2
+        dest: "{{ dns_script.path }}"
+        mode: '0600'
+      delegate_to: localhost
+      become: false
+      vars:
+        ansible_python_interpreter: "{{ ansible_playbook_python }}"
+      changed_when: false
+      check_mode: false
+
+    - name: Validate and copy the declared DNS configuration
+      ansible.builtin.script:
+        cmd: "{{ dns_script.path }}"
+        executable: /bin/sh
+      vars:
+        ansible_ssh_transfer_method: piped
+      register: dns_deploy
+      check_mode: false
+      changed_when: "'DNS_CHANGED' in dns_deploy.stdout"
+      notify: Restart dnsmasq
+
+    - name: Show DNS deployment result
+      ansible.builtin.debug:
+        var: dns_deploy.stdout_lines
+
+  always:
+    - name: Remove the local deployment script
+      ansible.builtin.file:
+        path: "{{ dns_script.path }}"
+        state: absent
+      delegate_to: localhost
+      become: false
+      vars:
+        ansible_python_interpreter: "{{ ansible_playbook_python }}"
+      changed_when: false
+      check_mode: false
+      when: dns_script.path is defined

@@ -1,0 +1,29 @@
+#!/bin/sh
+set -eu
+candidate=$(mktemp /tmp/ansible-dns.XXXXXX)
+trap 'rm -f "$candidate"' EXIT
+trap 'exit 1' HUP INT TERM
+printf '%s' {{ (dns_rendered.stdout | from_json).dnsmasq_conf | b64encode | quote }} | base64 -d > "$candidate"
+dnsmasq --test --conf-file="$candidate"
+if cmp -s "$candidate" /etc/dnsmasq.conf; then
+    echo 'DNS_UNCHANGED'
+    exit 0
+fi
+{% if ansible_diff_mode %}
+if command -v diff >/dev/null; then
+    current=/etc/dnsmasq.conf
+    [ -f "$current" ] || current=/dev/null
+    diff -u "$current" "$candidate" || [ "$?" -eq 1 ]
+fi
+{% endif %}
+{% if ansible_check_mode %}
+echo 'DNS_CHANGED: preview only'
+{% else %}
+if [ -f /etc/dnsmasq.conf ]; then
+    cp -p /etc/dnsmasq.conf /etc/dnsmasq.conf.ansible-backup
+fi
+cp "$candidate" /etc/dnsmasq.conf.ansible-new
+chmod 0644 /etc/dnsmasq.conf.ansible-new
+mv /etc/dnsmasq.conf.ansible-new /etc/dnsmasq.conf
+echo 'DNS_CHANGED: installed repository configuration'
+{% endif %}

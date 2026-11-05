@@ -1,0 +1,4 @@
+---
+# Use the repository's existing Tanka installation, or override with [jsonnet].
+dns_jsonnet_command: [tk, eval]
+dns_jsonnet_file: "{{ playbook_dir }}/../dns/config.jsonnet"

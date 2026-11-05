@@ -1,0 +1,18 @@
+---
+- name: Manage GL-MT6000 without remote Python
+  hosts: gl_mt6000
+  gather_facts: false
+  become: false
+  pre_tasks:
+    - name: Verify the router model before changing configuration
+      ansible.builtin.raw: cat /tmp/sysinfo/model
+      args:
+        executable: /bin/sh
+      register: router_model
+      changed_when: false
+      check_mode: false
+      failed_when: router_model.rc != 0 or 'GL-MT6000' not in router_model.stdout
+      tags: [always]
+  roles:
+    - role: router_dns
+      tags: [dns]

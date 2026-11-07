@@ -74,19 +74,13 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
     ) + {
       spec+: { strategy: { type: 'Recreate' } },
     },
-    k8sUtils.generateIngress(
+    k8sUtils.generateHTTPRoutes(
       namespace=$.namespace,
       appName=$.appName,
       serviceName=$.appName,
-      annotations={
-        'nginx.ingress.kubernetes.io/proxy-body-size': '0',
-        'nginx.ingress.kubernetes.io/proxy-buffering': 'off',
-        'nginx.ingress.kubernetes.io/proxy-read-timeout': '3600',
-        'nginx.ingress.kubernetes.io/proxy-send-timeout': '3600',
-      },
+      requestTimeout='3600s',
       port=$.port,
       hostnameList=hosts,
-      certificateName=certificateName,
     ),
   ]),
 }

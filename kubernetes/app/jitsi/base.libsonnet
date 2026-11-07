@@ -17,36 +17,14 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
     chart=chartPath,
     config={
       values: {
+        publicURL: 'https://' + host,
         tz: 'Asia/Shanghai',
         jvb: {
           useHostPort: true,
           useNodeIP: true
         },
         web: {
-          ingress: {
-            enabled: true,
-            ingressClassName: 'nginx',
-            annotations: {
-              'kubernetes.io/ingress.class': 'nginx',
-              'nginx.ingress.kubernetes.io/ssl-redirect': 'true',
-              'nginx.ingress.kubernetes.io/force-ssl-redirect': 'true',
-              'nginx.ingress.kubernetes.io/use-port-in-redirects': 'true',
-            },
-            hosts: [
-              {
-                host: host,
-                paths: ['/'],
-              },
-            ],
-            tls: [
-              {
-                secretName: $.certificateName,
-                hosts: [
-                  host,
-                ],
-              },
-            ],
-          },
+          ingress: { enabled: false },
         },
         prosody: {
           persistence: {
@@ -56,6 +34,14 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       },
       namespace: $.namespace,
     },
+  ),
+
+  routes: k8sUtils.generateHTTPRoutes(
+    namespace=$.namespace,
+    appName=$.appName,
+    serviceName=$.appName + '-jitsi-meet-web',
+    port=80,
+    hostnameList=[host],
   ),
 
   jitsi_meet: tankaUtils.k8s.patchKubernetesObjects(

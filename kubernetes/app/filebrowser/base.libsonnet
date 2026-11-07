@@ -96,17 +96,12 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       ),
       replicas=$.replicas,
     ),
-    k8sUtils.generateIngress(
+    k8sUtils.generateHTTPRoutes(
       namespace=$.namespace,
       appName=$.appName,
       serviceName=$.appName,
-      annotations={
-        'nginx.ingress.kubernetes.io/proxy-body-size': '0',
-        'nginx.ingress.kubernetes.io/proxy-request-buffering': 'off',
-      },
       port=$.port,
       hostnameList=hosts,
-      certificateName=$.certificateName,
     ),
   ]),
 }

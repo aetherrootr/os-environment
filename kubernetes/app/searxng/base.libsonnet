@@ -80,14 +80,12 @@ local settings = importstr 'config/settings.yml';
       ),
       replicas=$.replicas,
     ),
-    k8sUtils.generateIngress(
+    k8sUtils.generateHTTPRoutes(
       namespace=$.namespace,
       appName=$.appName,
       serviceName=$.appName,
-      annotations={},
       port=$.port,
       hostnameList=hosts,
-      certificateName=$.certificateName,
     ),
   ]),
 }

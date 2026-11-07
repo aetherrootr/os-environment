@@ -152,14 +152,12 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       containers=workerContainer,
       replicas=$.workerReplicas,
     ),
-    k8sUtils.generateIngress(
+    k8sUtils.generateHTTPRoutes(
       namespace=$.namespace,
       appName=$.appName + '-server',
       serviceName=$.appName + '-server',
-      annotations={},
       port=$.authentikHttpPort,
       hostnameList=hosts,
-      certificateName=$.certificateName,
     ),
   ]),
 }

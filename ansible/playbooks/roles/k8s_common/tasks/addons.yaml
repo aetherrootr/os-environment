@@ -8,5 +8,5 @@
 - name: Manage cert-manager
   ansible.builtin.import_tasks: cert_manager.yaml
 
-- name: Manage ingress-nginx
-  ansible.builtin.import_tasks: ingress.yaml
+- name: Manage Envoy Gateway
+  ansible.builtin.import_tasks: envoy_gateway.yaml

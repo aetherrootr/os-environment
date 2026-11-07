@@ -1,11 +1,4 @@
 ---
-- name: Install ingress-nginx
-  ansible.builtin.include_role:
-    name: k8s_common
-    tasks_from: ingress
-  vars:
-    k8s_ingress_nginx_version: "{{ ingress_nginx_version }}"
-
 - name: Install cert-manager
   ansible.builtin.include_role:
     name: k8s_common

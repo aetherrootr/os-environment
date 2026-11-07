@@ -1,0 +1,9 @@
+---
+- name: Install Envoy Gateway
+  ansible.builtin.include_role:
+    name: k8s_common
+    tasks_from: envoy_gateway
+    apply:
+      tags: [envoy_gateway]
+  vars:
+    k8s_envoy_gateway_version: "{{ envoy_gateway_version }}"

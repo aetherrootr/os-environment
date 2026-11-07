@@ -122,14 +122,12 @@ local homeassistantConfig = importstr 'config/configuration.yaml';
     ) + {
       spec+: { strategy: { type: 'Recreate' } },
     },
-    k8sUtils.generateIngress(
+    k8sUtils.generateHTTPRoutes(
       namespace=$.namespace,
       appName=$.appName,
       serviceName=$.appName,
-      annotations={},
       port=$.port,
       hostnameList=hosts,
-      certificateName=$.certificateName,
     ),
   ] + sqliteBackupResources.cron),
 }

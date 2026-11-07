@@ -33,9 +33,7 @@
       vars:
         k8s_calico_version: "{{ k8s_pre_calico_version | default('') }}"
         k8s_cert_manager_version: "{{ k8s_pre_cert_manager_version | default('') }}"
-        k8s_ingress_nginx_version: "{{ k8s_pre_ingress_nginx_version | default('') }}"
         k8s_cert_rotation_guard: true
-        k8s_ingress_cleanup_admission_jobs: true
 
 - name: Upgrade control plane
   hosts: k8s-master
@@ -74,9 +72,7 @@
       vars:
         k8s_calico_version: "{{ k8s_post_calico_version | default('') }}"
         k8s_cert_manager_version: "{{ k8s_post_cert_manager_version | default('') }}"
-        k8s_ingress_nginx_version: "{{ k8s_post_ingress_nginx_version | default('') }}"
         k8s_cert_rotation_guard: true
-        k8s_ingress_cleanup_admission_jobs: true
 
     - name: Run post-upgrade validation
       ansible.builtin.import_role:

@@ -59,6 +59,7 @@ spec:
     - name: https
       protocol: HTTPS
       port: 443
+      hostname: "*.corp.aetherrootr.com"
       allowedRoutes:
         namespaces:
           from: All
@@ -70,6 +71,18 @@ spec:
           - group: ""
             kind: Secret
             name: edge-wildcard-certificate-tls
+    - name: https-authentik
+      protocol: HTTPS
+      port: 443
+      hostname: authentik.aetherrootr.com
+      allowedRoutes:
+        namespaces:
+          from: All
+        kinds:
+          - kind: HTTPRoute
+      tls:
+        mode: Terminate
+        certificateRefs:
           - group: ""
             kind: Secret
             name: edge-gateway-authentik-certificate-tls

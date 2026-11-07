@@ -157,6 +157,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       serviceName=$.appName + '-server',
       port=$.authentikHttpPort,
       hostnameList=hosts,
+      httpsListener='https-authentik',
     ),
   ]),
 }

@@ -82,8 +82,15 @@ remain independently bootstrapped to avoid self-management. The two edge
 Certificates are applied by bootstrap and renewed by cert-manager; they are not
 registered as Argo CD Applications. Argo CD adopts the ClusterIssuer and
 Cloudflare credential mapping after bootstrap. Additional public
-certificates belong in `edge-gateway` and must also be referenced by the Gateway's
-HTTPS listener. Applications covered by the wildcard only need an HTTPRoute;
+certificates belong in `edge-gateway`. Each HTTPS listener specifies a hostname
+and exactly one certificate Secret: `https` binds `*.corp.aetherrootr.com` to the
+wildcard certificate, and `https-authentik` binds `authentik.aetherrootr.com` to
+the Authentik certificate. HTTPRoutes explicitly select their listener through
+`parentRefs.sectionName`; the shared helper defaults to `https`, while Authentik
+sets `httpsListener='https-authentik'`. SNI still selects the matching listener
+during the TLS handshake. Additional certificate domains need their own listener
+and explicit route attachment. Applications covered by the wildcard only need
+an HTTPRoute;
 they do not need a certificate in their own namespace. Application-internal TLS
 and mTLS certificates remain separate. Certificate readiness defaults to a
 10-minute timeout, configurable with `CERTIFICATE_TIMEOUT`.

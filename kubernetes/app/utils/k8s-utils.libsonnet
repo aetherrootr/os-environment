@@ -170,10 +170,10 @@ local gatewayUtils = import 'gateway-utils.libsonnet';
 
   generateHTTPRoutes(namespace, appName, serviceName, port, hostnameList,
                      tls=true, withAuthProxy=false, basicAuthSecret=null,
-                     rules=null, requestTimeout='0s', extraLabels={}):
+                     rules=null, requestTimeout='0s', extraLabels={}, httpsListener='https'):
     gatewayUtils.routes(
       namespace, appName, serviceName, port, hostnameList,
-      tls, withAuthProxy, basicAuthSecret, rules, requestTimeout, extraLabels
+      tls, withAuthProxy, basicAuthSecret, rules, requestTimeout, extraLabels, httpsListener
     ),
 
   getServiceHostname(serviceName):

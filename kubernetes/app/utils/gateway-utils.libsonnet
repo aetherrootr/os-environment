@@ -14,7 +14,7 @@
 
   routes(namespace, appName, serviceName, port, hostnameList,
          tls=true, withAuthProxy=false, basicAuthSecret=null,
-         rules=null, requestTimeout='0s', extraLabels={}):
+         rules=null, requestTimeout='0s', extraLabels={}, httpsListener='https'):
     local metadata(name) = { name: name, namespace: namespace, labels: { app: appName } + extraLabels };
     local route(name, listener, routeRules) = {
       apiVersion: 'gateway.networking.k8s.io/v1', kind: 'HTTPRoute',
@@ -30,7 +30,7 @@
     local appRules = if rules == null then [$.rule('/', serviceName, port)] else rules;
     {
       apiVersion: 'v1', kind: 'List',
-      items: [route(appName, if tls then 'https' else 'http', [
+      items: [route(appName, if tls then httpsListener else 'http', [
         rule + { timeouts: { request: requestTimeout, backendRequest: requestTimeout } }
         for rule in appRules
       ])]
@@ -40,7 +40,7 @@
         }])] else [])
       + (if withAuthProxy then [
           // Public callback paths must never inherit the application auth policy.
-          route(appName + '-auth-outpost', 'https', [$.rule(
+          route(appName + '-auth-outpost', httpsListener, [$.rule(
             '/outpost.goauthentik.io', 'authentik-proxy-outpost-' + appName, 9000
           )]),
           {

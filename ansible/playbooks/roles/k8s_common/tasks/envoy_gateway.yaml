@@ -23,7 +23,6 @@
           - --for=condition=Established
           - crd/gateways.gateway.networking.k8s.io
           - crd/httproutes.gateway.networking.k8s.io
-          - crd/referencegrants.gateway.networking.k8s.io
           - crd/envoyproxies.gateway.envoyproxy.io
           - crd/securitypolicies.gateway.envoyproxy.io
           - crd/clienttrafficpolicies.gateway.envoyproxy.io

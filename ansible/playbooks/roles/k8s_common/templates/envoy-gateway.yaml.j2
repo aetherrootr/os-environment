@@ -1,31 +1,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: infrastructure
----
-apiVersion: v1
-kind: Namespace
-metadata:
   name: edge-gateway
----
-# Certificate owners permit only these existing TLS Secrets to be referenced.
-apiVersion: gateway.networking.k8s.io/v1
-kind: ReferenceGrant
-metadata:
-  name: edge-gateway-tls
-  namespace: infrastructure
-spec:
-  from:
-    - group: gateway.networking.k8s.io
-      kind: Gateway
-      namespace: edge-gateway
-  to:
-    - group: ""
-      kind: Secret
-      name: infrastructure-wildcard-certificate-tls
-    - group: ""
-      kind: Secret
-      name: infrastructure-authentik-certificate-tls
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: GatewayClass
@@ -93,12 +69,10 @@ spec:
         certificateRefs:
           - group: ""
             kind: Secret
-            name: infrastructure-wildcard-certificate-tls
-            namespace: infrastructure
+            name: edge-wildcard-certificate-tls
           - group: ""
             kind: Secret
-            name: infrastructure-authentik-certificate-tls
-            namespace: infrastructure
+            name: edge-authentik-certificate-tls
 ---
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: ClientTrafficPolicy

@@ -12,12 +12,6 @@ It is very easy to build a cluster using ansible scripts, just deploy the k8s-ma
 New clusters are pinned to Kubernetes v1.35.7, Calico v3.32.1,
 Envoy Gateway v1.9.3, and cert-manager v1.21.1.
 
-Ansible installs Envoy Gateway and its infrastructure configuration. Run the
-[Kubernetes bootstrap](../../kubernetes/README.md#bootstrap-with-argo-cd) afterwards
-to issue TLS certificates and apply the shared `edge-gateway/edge-gateway`
-Gateway and listeners from [Jsonnet](../../kubernetes/gateway/README.md) before
-installing Argo CD.
-
 ## k8s master
 
 Run the command to deploy k8s master node:

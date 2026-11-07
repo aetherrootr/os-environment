@@ -12,13 +12,13 @@ spec:
   parametersRef:
     group: gateway.envoyproxy.io
     kind: EnvoyProxy
-    name: edge
+    name: edge-gateway
     namespace: edge-gateway
 ---
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: EnvoyProxy
 metadata:
-  name: edge
+  name: edge-gateway
   namespace: edge-gateway
 spec:
   provider:
@@ -43,7 +43,7 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
-  name: edge
+  name: edge-gateway
   namespace: edge-gateway
 spec:
   gatewayClassName: envoy
@@ -77,13 +77,13 @@ spec:
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: ClientTrafficPolicy
 metadata:
-  name: edge
+  name: edge-gateway
   namespace: edge-gateway
 spec:
   targetRefs:
     - group: gateway.networking.k8s.io
       kind: Gateway
-      name: edge
+      name: edge-gateway
   timeout:
     http:
       streamIdleTimeout: 3600s

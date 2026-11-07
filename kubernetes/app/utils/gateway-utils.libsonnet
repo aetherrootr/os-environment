@@ -1,6 +1,6 @@
 // Shared edge Gateway is installed by the Ansible k8s_common role.
 {
-  gatewayName: 'edge',
+  gatewayName: 'edge-gateway',
   gatewayNamespace: 'edge-gateway',
 
   rule(path, serviceName, port, pathType='PathPrefix', rewrite=null): {

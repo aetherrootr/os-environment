@@ -2,6 +2,7 @@ local applicationsAndServicesNamespace = import 'applications-and-services/base.
 local argocdNamespace = import 'argocd/base.libsonnet';
 local bitwardenSecretsManagerNamespace = import 'bitwarden-secrets-manager/base.libsonnet';
 local cloudflareTunnelNamespace = import 'cloudflare-tunnel/base.libsonnet';
+local edgeGatewayNamespace = import 'edge-gateway/base.libsonnet';
 local infrastructureNamespace = import 'infrastructure/base.libsonnet';
 local kubernetesDashboardNamespace = import 'kubernetes-dashboard/base.libsonnet';
 
@@ -13,6 +14,7 @@ local kubernetesDashboardNamespace = import 'kubernetes-dashboard/base.libsonnet
     applicationsAndServicesNamespace.namespace,
     bitwardenSecretsManagerNamespace.namespace,
     infrastructureNamespace.namespace,
+    edgeGatewayNamespace.namespace,
     cloudflareTunnelNamespace.namespace,
     argocdNamespace.namespace,
   ]),

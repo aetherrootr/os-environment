@@ -3,6 +3,30 @@ kind: Namespace
 metadata:
   name: infrastructure
 ---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: edge-gateway
+---
+# Certificate owners permit only these existing TLS Secrets to be referenced.
+apiVersion: gateway.networking.k8s.io/v1
+kind: ReferenceGrant
+metadata:
+  name: edge-gateway-tls
+  namespace: infrastructure
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      namespace: edge-gateway
+  to:
+    - group: ""
+      kind: Secret
+      name: infrastructure-wildcard-certificate-tls
+    - group: ""
+      kind: Secret
+      name: infrastructure-authentik-certificate-tls
+---
 apiVersion: gateway.networking.k8s.io/v1
 kind: GatewayClass
 metadata:
@@ -13,13 +37,13 @@ spec:
     group: gateway.envoyproxy.io
     kind: EnvoyProxy
     name: edge
-    namespace: infrastructure
+    namespace: edge-gateway
 ---
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: EnvoyProxy
 metadata:
   name: edge
-  namespace: infrastructure
+  namespace: edge-gateway
 spec:
   provider:
     type: Kubernetes
@@ -44,7 +68,7 @@ apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
   name: edge
-  namespace: infrastructure
+  namespace: edge-gateway
 spec:
   gatewayClassName: envoy
   listeners:
@@ -70,15 +94,17 @@ spec:
           - group: ""
             kind: Secret
             name: infrastructure-wildcard-certificate-tls
+            namespace: infrastructure
           - group: ""
             kind: Secret
             name: infrastructure-authentik-certificate-tls
+            namespace: infrastructure
 ---
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: ClientTrafficPolicy
 metadata:
   name: edge
-  namespace: infrastructure
+  namespace: edge-gateway
 spec:
   targetRefs:
     - group: gateway.networking.k8s.io

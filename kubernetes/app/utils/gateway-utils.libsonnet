@@ -5,7 +5,7 @@
 
   rule(path, serviceName, port, pathType='PathPrefix', rewrite=null): {
     matches: [{ path: { type: pathType, value: path } }],
-    backendRefs: [{ name: serviceName, port: port }],
+    backendRefs: [{ group: '', kind: 'Service', name: serviceName, port: port, weight: 1 }],
   } + (if rewrite == null then {} else {
     filters: [{ type: 'URLRewrite', urlRewrite: { path: {
       type: 'ReplaceFullPath', replaceFullPath: rewrite,
@@ -20,7 +20,8 @@
       apiVersion: 'gateway.networking.k8s.io/v1', kind: 'HTTPRoute',
       metadata: metadata(name),
       spec: {
-        parentRefs: [{ name: $.gatewayName, namespace: $.gatewayNamespace, sectionName: listener }],
+        parentRefs: [{ group: 'gateway.networking.k8s.io', kind: 'Gateway',
+                       name: $.gatewayName, namespace: $.gatewayNamespace, sectionName: listener }],
         hostnames: hostnameList,
         rules: routeRules,
       },
@@ -51,7 +52,8 @@
                 failOpen: false,
                 headersToExtAuth: ['cookie', 'x-forwarded-for', 'x-forwarded-proto', 'x-forwarded-host'],
                 http: {
-                  backendRefs: [{ name: 'authentik-proxy-outpost-' + appName, port: 9000 }],
+                  backendRefs: [{ group: '', kind: 'Service',
+                                  name: 'authentik-proxy-outpost-' + appName, port: 9000, weight: 1 }],
                   // Authentik's Envoy endpoint returns login redirects itself.
                   path: '/outpost.goauthentik.io/auth/envoy',
                   headersToBackend: ['set-cookie', 'x-authentik-username', 'x-authentik-groups',
@@ -64,7 +66,7 @@
       + (if basicAuthSecret != null then [{
           apiVersion: 'gateway.envoyproxy.io/v1alpha1', kind: 'SecurityPolicy',
           metadata: metadata(appName + '-basic-auth'),
-          spec: { targetRefs: target, basicAuth: { users: { name: basicAuthSecret } } },
+          spec: { targetRefs: target, basicAuth: { users: { group: '', kind: 'Secret', name: basicAuthSecret } } },
         }] else []),
     },
 }

@@ -39,7 +39,7 @@ NFS exports/data in `volume/`, and the existing Bitwarden secret IDs before star
 Ansible installs Envoy Gateway and its infrastructure configuration. Bootstrap
 issues the wildcard and Authentik certificates, then applies the shared
 `edge-gateway/edge-gateway` Gateway and its listeners through Jsonnet under
-[`certificates/`](certificates/README.md). Both TLS Secrets live in `edge-gateway`.
+[`gateway/`](gateway/README.md). Both TLS Secrets live in `edge-gateway`.
 Merge these definitions into remote `master` first: Argo CD reads that branch,
 including the dependency lock files.
 
@@ -83,8 +83,9 @@ remain independently bootstrapped to avoid self-management. The edge Gateway and
 its two Certificates are applied by bootstrap and are not registered as Argo CD
 Applications; cert-manager renews the certificates. Argo CD adopts the
 ClusterIssuer and Cloudflare credential mapping after bootstrap. See the
-[certificate and listener configuration](certificates/README.md) for domain
-bindings and subsequent changes. Certificate readiness defaults to a 10-minute
+[certificate configuration](certificates/README.md) and
+[Gateway/listener configuration](gateway/README.md) for domain bindings and
+subsequent changes. Certificate readiness defaults to a 10-minute
 timeout, configurable with `CERTIFICATE_TIMEOUT`.
 The root Application automatically maintains application/project registrations
 from `master`, including changes to the application and Secret lists. Its own

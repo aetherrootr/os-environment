@@ -15,7 +15,8 @@ Envoy Gateway v1.9.3, and cert-manager v1.21.1.
 Ansible installs Envoy Gateway and its infrastructure configuration. Run the
 [Kubernetes bootstrap](../../kubernetes/README.md#bootstrap-with-argo-cd) afterwards
 to issue TLS certificates and apply the shared `edge-gateway/edge-gateway`
-Gateway and listeners from Jsonnet before installing Argo CD.
+Gateway and listeners from [Jsonnet](../../kubernetes/gateway/README.md) before
+installing Argo CD.
 
 ## k8s master
 

@@ -1,4 +1,4 @@
-// Shared edge Gateway and listeners are managed under kubernetes/certificates.
+// Shared edge Gateway and listeners are managed under kubernetes/gateway.
 {
   gatewayName: 'edge-gateway',
   gatewayNamespace: 'edge-gateway',

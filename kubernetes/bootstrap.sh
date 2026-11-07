@@ -66,7 +66,7 @@ deploy kubernetes/certificates/authentik.aetherrootr.com/namespaces/edge-gateway
 kubectl -n edge-gateway wait --for=condition=Ready \
   certificate/edge-wildcard-certificate \
   certificate/edge-gateway-authentik-certificate --timeout="$certificate_timeout"
-deploy kubernetes/certificates/edge-gateway/env/prod.jsonnet
+deploy kubernetes/gateway/edge-gateway/env/prod.jsonnet
 kubectl -n edge-gateway wait --for=condition=Programmed \
   gateway/edge-gateway --timeout="$bootstrap_timeout"
 

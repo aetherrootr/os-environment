@@ -50,14 +50,12 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       podSpec=k8sUtils.generatePodSpec(serviceAccountName=$.appName),
       replicas=$.replicas,
     ),
-    k8sUtils.generateIngress(
+    k8sUtils.generateHTTPRoutes(
       namespace=$.namespace,
       appName=$.appName,
       serviceName=$.appName,
-      annotations={},
       port=$.port,
       hostnameList=hosts,
-      certificateName=$.certificateName,
     ),
   ]),
 }

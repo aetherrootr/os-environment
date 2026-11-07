@@ -73,16 +73,12 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       ),
       replicas=$.replicas,
     ),
-    k8sUtils.generateIngress(
+    k8sUtils.generateHTTPRoutes(
       namespace=$.namespace,
       appName=$.appName,
       serviceName=$.appName,
-      annotations={
-        'nginx.ingress.kubernetes.io/auth-response-headers': "Authorization,Remote-User"
-      },
       port=$.port,
       hostnameList=hosts,
-      certificateName=$.certificateName,
     ),
   ]),
 }

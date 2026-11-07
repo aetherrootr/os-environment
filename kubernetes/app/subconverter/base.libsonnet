@@ -46,46 +46,15 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       podSpec=k8sUtils.generatePodSpec(),
       replicas=$.replicas,
     ),
-    k8sUtils.generateIngress(
+    k8sUtils.generateHTTPRoutes(
       namespace=$.namespace,
       appName=$.appName,
       serviceName=$.appName,
-      annotations={},
       port=$.port,
       hostnameList=hosts,
-      certificateName=$.certificateName,
-      extraPaths=[],
-      extraGeneratedPaths=[
-        k8sUtils.generateIngressPath(
-          urlPath='/',
-          serviceName=$.appName,
-          servicePort=$.port,
-          pathType='Prefix',
-        ),
-      ],
-    ),
-    // Keep root subscription URLs working without rewriting application APIs.
-    // ingress-nginx enables regex matching for every path on a host with a
-    // rewrite-target, so anchor the root path explicitly instead of using Exact.
-    k8sUtils.generateIngress(
-      namespace=$.namespace,
-      appName=$.appName + '-root-subscription',
-      serviceName=$.appName,
-      annotations={
-        'nginx.ingress.kubernetes.io/use-regex': 'true',
-        'nginx.ingress.kubernetes.io/rewrite-target': '/sub',
-      },
-      port=$.port,
-      hostnameList=hosts,
-      certificateName=$.certificateName,
-      extraPaths=[],
-      extraGeneratedPaths=[
-        k8sUtils.generateIngressPath(
-          urlPath='/$',
-          serviceName=$.appName,
-          servicePort=$.port,
-          pathType='ImplementationSpecific',
-        ),
+      rules=[
+        (import 'utils/gateway-utils.libsonnet').rule('/', $.appName, $.port, pathType='Exact', rewrite='/sub'),
+        (import 'utils/gateway-utils.libsonnet').rule('/', $.appName, $.port),
       ],
     ),
   ]),

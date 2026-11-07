@@ -347,16 +347,12 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
         'app.kubernetes.io/part-of': 'argocd',
       },
     ),
-    k8sUtils.generateIngress(
+    k8sUtils.generateHTTPRoutes(
       namespace=$.namespace,
       appName='argocd',
       serviceName=$.appName,
-      annotations={
-        'nginx.ingress.kubernetes.io/backend-protocol': 'HTTP',
-      },
       port=80,
       hostnameList=[$.hostname],
-      certificateName=$.certificateName,
     ),
   ],
 }

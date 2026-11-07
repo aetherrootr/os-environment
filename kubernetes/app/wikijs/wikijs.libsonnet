@@ -141,14 +141,12 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
     ) + {
       spec+: { strategy: { type: 'Recreate' } },
     },
-    k8sUtils.generateIngress(
+    k8sUtils.generateHTTPRoutes(
       namespace=$.namespace,
       appName=$.appName,
       serviceName=$.appName,
-      annotations={},
       port=$.port,
       hostnameList=hosts,
-      certificateName=$.certificateName,
     ),
   ]),
 }

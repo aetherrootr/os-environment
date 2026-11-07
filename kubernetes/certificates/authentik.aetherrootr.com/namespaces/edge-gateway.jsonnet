@@ -6,6 +6,6 @@ env {
 
   deployTarget: base {
     namespace: $.namespace,
-    name: 'edge-authentik-certificate',
+    name: 'edge-gateway-authentik-certificate',
   },
 }

@@ -14,7 +14,6 @@
   kind: 'ClusterIssuer',
   metadata: {
     name: $.name,
-    annotations: { 'tanka.dev/namespaced': 'false' },
   },
   spec: {
     acme: {

@@ -5,7 +5,6 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   appName:: error ('appName is required'),
   replicas:: 1,
   port:: 8080,
-  certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
   local containerImage = 'gtstef/filebrowser:1.3.2-stable-slim',
   local hosts = [k8sUtils.getServiceHostname(serviceName='files')],
@@ -101,6 +100,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       appName=$.appName,
       serviceName=$.appName,
       port=$.port,
+      httpsListener='https-wildcard',
       hostnameList=hosts,
     ),
   ]),

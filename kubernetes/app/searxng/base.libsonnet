@@ -6,7 +6,6 @@ local settings = importstr 'config/settings.yml';
   appName:: error ('appName is required'),
   replicas:: 1,
   port:: 8080,
-  certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.appName)],
   local containerImage='searxng/searxng:2026.8.19-5ffd32ca2',
@@ -85,6 +84,7 @@ local settings = importstr 'config/settings.yml';
       appName=$.appName,
       serviceName=$.appName,
       port=$.port,
+      httpsListener='https-wildcard',
       hostnameList=hosts,
     ),
   ]),

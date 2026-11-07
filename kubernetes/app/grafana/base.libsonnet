@@ -7,7 +7,6 @@ local prometheusDatasource = importstr 'datasource/prometheus.yaml';
   appName:: error ('appName is required'),
   replicas:: 1,
   port:: 3000,
-  certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
   local containerImage = 'grafana/grafana:13.3.0',
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.appName)],
@@ -114,6 +113,7 @@ local prometheusDatasource = importstr 'datasource/prometheus.yaml';
       appName=$.appName,
       serviceName=$.appName,
       port=$.port,
+      httpsListener='https-wildcard',
       hostnameList=hosts,
     ),
   ] + sqliteBackupResources.cron),

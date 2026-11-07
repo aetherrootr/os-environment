@@ -6,7 +6,6 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   replicas:: 1,
   port:: 9090,
   grpcPort:: 10901,
-  certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
   local containerImage = 'thanosio/thanos:v0.42.5',
   local hosts = [k8sUtils.getServiceHostname(serviceName='prometheus')],
@@ -61,6 +60,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       appName=$.appName,
       serviceName=$.appName,
       port=$.port,
+      httpsListener='https-wildcard',
       hostnameList=hosts,
       withAuthProxy=true,
     ),

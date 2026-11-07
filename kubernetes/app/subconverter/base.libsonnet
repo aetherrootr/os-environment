@@ -5,7 +5,6 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   appName:: error ('appName is required'),
   replicas:: 1,
   port:: 25500,
-  certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
   local containerImage = 'ghcr.io/aetherrootr/subconverter-extended:v1.9.14',
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.appName)],
@@ -51,6 +50,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       appName=$.appName,
       serviceName=$.appName,
       port=$.port,
+      httpsListener='https-wildcard',
       hostnameList=hosts,
       rules=[
         (import 'utils/gateway-utils.libsonnet').rule('/', $.appName, $.port, pathType='Exact', rewrite='/sub'),

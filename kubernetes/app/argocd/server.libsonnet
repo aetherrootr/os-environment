@@ -6,7 +6,6 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   image:: 'quay.io/argoproj/argocd:v3.5.6',
   replicas:: 1,
   hostname:: k8sUtils.getServiceHostname('argocd'),
-  certificateName:: k8sUtils.getWildcardCertificateName($.namespace),
 
   local parameterEnv = {
     GRPC_ENABLE_TXT_SERVICE_CONFIG: 'server.grpc.enable.txt.service.config',
@@ -352,6 +351,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       appName='argocd',
       serviceName=$.appName,
       port=80,
+      httpsListener='https-wildcard',
       hostnameList=[$.hostname],
     ),
   ],

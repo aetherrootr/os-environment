@@ -168,19 +168,16 @@ local gatewayUtils = import 'gateway-utils.libsonnet';
   getAuthProxyOutpostServiceUrl(appName, namespace):
     'http://' + $.getAuthProxyOutpostAppName(appName) + '.' + namespace + '.svc.cluster.local:9000',
 
-  generateHTTPRoutes(namespace, appName, serviceName, port, hostnameList,
+  generateHTTPRoutes(namespace, appName, serviceName, port, hostnameList, httpsListener,
                      tls=true, withAuthProxy=false, basicAuthSecret=null,
                      rules=null, requestTimeout='0s', extraLabels={}):
     gatewayUtils.routes(
-      namespace, appName, serviceName, port, hostnameList,
+      namespace, appName, serviceName, port, hostnameList, httpsListener,
       tls, withAuthProxy, basicAuthSecret, rules, requestTimeout, extraLabels
     ),
 
   getServiceHostname(serviceName):
     serviceName + '.corp.aetherrootr.com',
-
-  getWildcardCertificateName(namespace):
-    namespace + '-wildcard-certificate-tls',
 
   getPVCName(storageClass, namespace):
     storageClass + '-' + namespace + '-pvc',

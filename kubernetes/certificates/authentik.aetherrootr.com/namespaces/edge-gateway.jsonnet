@@ -2,9 +2,10 @@ local base = import '../base.libsonnet';
 local env = import 'common/inline-environments-base.libsonnet';
 
 env {
-  namespace:: 'argocd',
+  namespace:: 'edge-gateway',
 
   deployTarget: base {
     namespace: $.namespace,
+    name: 'edge-gateway-authentik-certificate',
   },
 }

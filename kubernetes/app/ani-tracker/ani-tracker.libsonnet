@@ -15,7 +15,6 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   appSecretName:: error ('appSecretName is required'),
 
   image:: 'ghcr.io/aetherrootr/ani-tracker:v0.1.13',
-  certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
   replicas:: 1,
   workerReplicas:: 1,
   beatReplicas:: 1,
@@ -241,6 +240,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       appName=$.appName,
       serviceName=$.appName,
       port=$.port,
+      httpsListener='https-wildcard',
       hostnameList=hosts,
     ),
   ]),

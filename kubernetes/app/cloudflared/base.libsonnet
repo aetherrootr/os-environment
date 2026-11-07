@@ -4,7 +4,6 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   namespace:: error ('namespace is required'),
   appName:: 'cloudflared',
   replicas:: 1,
-  certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
   local containerImage = 'cloudflare/cloudflared:2026.10.7',
 

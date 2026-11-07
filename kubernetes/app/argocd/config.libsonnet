@@ -136,7 +136,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
     k8sUtils.generateConfigMap(
       namespace=$.namespace,
       appName='argocd-cmd-params-cm',
-      // TLS terminates at NGINX; Bitwarden operator manages argocd-secret.
+      // TLS terminates at Envoy Gateway; Bitwarden operator manages argocd-secret.
       data={
         'server.insecure': 'true',
         'controller.repo.server.timeout.seconds': '240',

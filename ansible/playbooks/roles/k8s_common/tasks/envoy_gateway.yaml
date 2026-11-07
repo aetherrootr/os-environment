@@ -43,7 +43,7 @@
           - --timeout=10m
       changed_when: false
 
-    - name: Render shared edge Gateway
+    - name: Render Envoy Gateway infrastructure
       ansible.builtin.template:
         src: envoy-gateway.yaml.j2
         dest: /tmp/envoy-gateway.yaml
@@ -51,7 +51,7 @@
         group: root
         mode: "0600"
 
-    - name: Apply shared edge Gateway
+    - name: Apply Envoy Gateway infrastructure
       ansible.builtin.command:
         argv:
           - kubectl

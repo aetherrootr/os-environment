@@ -6,7 +6,6 @@ local sqliteBackup = import 'utils/sqlite-backup.libsonnet';
   appName:: 'komga',
   replicas:: 1,
   port:: 25600,
-  certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
   urlPrefix:: 'library',
 
   local containerImage = 'gotson/komga:1.29.2',
@@ -115,6 +114,7 @@ local sqliteBackup = import 'utils/sqlite-backup.libsonnet';
       appName=$.appName,
       serviceName=$.appName,
       port=$.port,
+      httpsListener='https-wildcard',
       hostnameList=hosts,
     ),
   ] + sqliteBackupResources.cron),

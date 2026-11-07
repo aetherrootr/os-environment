@@ -6,7 +6,6 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   appName:: error ('appName is required'),
   namespace:: error ('namespace is required'),
   urlPrefix:: 'meet',
-  certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
   local host = k8sUtils.getServiceHostname(serviceName=$.urlPrefix),
 
@@ -41,6 +40,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
     appName=$.appName,
     serviceName=$.appName + '-jitsi-meet-web',
     port=80,
+    httpsListener='https-wildcard',
     hostnameList=[host],
   ),
 

@@ -9,7 +9,5 @@ k8s_recover_cordoned_nodes: true
 k8s_cert_rotation_policy_confirmed: false
 k8s_pre_calico_version: ""
 k8s_pre_cert_manager_version: ""
-k8s_pre_ingress_nginx_version: ""
 k8s_post_calico_version: ""
 k8s_post_cert_manager_version: ""
-k8s_post_ingress_nginx_version: ""

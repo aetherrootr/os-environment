@@ -1,0 +1,63 @@
+---
+- name: Install and configure Envoy Gateway
+  when: k8s_envoy_gateway_version | length > 0
+  block:
+    - name: Apply official Envoy Gateway manifest and CRDs
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --kubeconfig
+          - "{{ k8s_kubeconfig }}"
+          - apply
+          - --server-side
+          - -f
+          - "https://github.com/envoyproxy/gateway/releases/download/{{ k8s_envoy_gateway_version }}/install.yaml"
+
+    - name: Wait for Gateway API and Envoy Gateway CRDs
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --kubeconfig
+          - "{{ k8s_kubeconfig }}"
+          - wait
+          - --for=condition=Established
+          - crd/gateways.gateway.networking.k8s.io
+          - crd/httproutes.gateway.networking.k8s.io
+          - crd/envoyproxies.gateway.envoyproxy.io
+          - crd/securitypolicies.gateway.envoyproxy.io
+          - crd/clienttrafficpolicies.gateway.envoyproxy.io
+          - --timeout=5m
+      changed_when: false
+
+    - name: Wait for Envoy Gateway controller
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --kubeconfig
+          - "{{ k8s_kubeconfig }}"
+          - --namespace
+          - envoy-gateway-system
+          - rollout
+          - status
+          - deployment/envoy-gateway
+          - --timeout=10m
+      changed_when: false
+
+    - name: Render shared edge Gateway
+      ansible.builtin.template:
+        src: envoy-gateway.yaml.j2
+        dest: /tmp/envoy-gateway.yaml
+        owner: root
+        group: root
+        mode: "0600"
+
+    - name: Apply shared edge Gateway
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --kubeconfig
+          - "{{ k8s_kubeconfig }}"
+          - apply
+          - --server-side
+          - -f
+          - /tmp/envoy-gateway.yaml

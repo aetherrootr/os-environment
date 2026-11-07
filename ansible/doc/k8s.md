@@ -10,7 +10,7 @@ My machine is the Intel NUC 11 Performance Kit - NUC11PAHi5 (unfortunately it's 
 It is very easy to build a cluster using ansible scripts, just deploy the k8s-master node first and then the k8s-slave node.
 
 New clusters are pinned to Kubernetes v1.35.7, Calico v3.32.1,
-ingress-nginx v1.15.1, and cert-manager v1.21.1.
+Envoy Gateway v1.9.3, and cert-manager v1.21.1.
 
 ## k8s master
 
@@ -169,8 +169,8 @@ task group with `tasks_from`:
 
 - `repository` and `packages` manage the Kubernetes apt repository, exact
   package versions, installed-version verification, and package holds.
-- `addons` manages Calico, calicoctl, cert-manager, ingress-nginx, rollout waits,
-  and the ingress NodePort configuration.
+- `addons` manages Calico, calicoctl, cert-manager, Envoy Gateway, rollout waits,
+  and the gateway NodePort configuration.
 - `healthcheck` performs installation, upgrade, and standalone validation.
 
 The `k8s` role still owns new-cluster bootstrap, `kubeadm init`, and node join.

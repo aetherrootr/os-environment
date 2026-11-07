@@ -33,7 +33,7 @@ tk complete
 ## Bootstrap with Argo CD
 
 Start with a working Kubernetes cluster configured by [Ansible](../ansible/doc/k8s.md)
-(including Calico, ingress-nginx and cert-manager), and local `kubectl`, `tk`, `jb`
+(including Calico, Envoy Gateway and cert-manager), and local `kubectl`, `tk`, `jb`
 and Helm commands. Review the node names in `node/proxmox/node-groups.libsonnet`,
 NFS exports/data in `volume/`, and the existing Bitwarden secret IDs before starting.
 Shared namespace certificates and the special Authentik certificate are maintained
@@ -67,7 +67,8 @@ including the dependency lock files.
 The script checks that the manually provisioned access tokens exist before
 applying resources. It applies namespaces, node configuration, RBAC and static
 volumes; installs Bitwarden operator; waits for Argo CD credentials; then
-installs Argo CD with its Tanka plugin and bootstraps the registration root. It applies
+installs Argo CD with its Tanka plugin and
+bootstraps the registration root. It applies
 resources without interactive confirmation. Argo CD subsequently maintains the
 workloads and business `BitwardenSecret` mappings from Git. Secret values remain
 in Bitwarden and are synchronized by the operator. Workloads can initially wait

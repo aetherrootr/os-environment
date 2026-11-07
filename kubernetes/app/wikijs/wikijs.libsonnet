@@ -10,7 +10,6 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   databasePasswordSecretName:: error ('databasePasswordSecretName is required'),
   replicas:: 1,
   port:: 3000,
-  certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
   local hosts = [k8sUtils.getServiceHostname(serviceName='wiki')],
 

@@ -7,7 +7,6 @@ local homeassistantConfig = importstr 'config/configuration.yaml';
   appName:: 'homeassistant',
   replicas:: 1,
   port:: 8123,
-  certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
   urlPrefix:: 'ha',
 
   local containerImage = 'ghcr.io/home-assistant/home-assistant:2026.10.4',

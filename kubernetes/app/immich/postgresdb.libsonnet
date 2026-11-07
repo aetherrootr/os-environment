@@ -9,7 +9,6 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   databaseUser:: error ('databaseUser is required'),
   databasePasswordSecretName:: error ('databasePasswordSecretName is required'),
   replicas:: 1,
-  certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
   local containerImage = 'ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0',
 

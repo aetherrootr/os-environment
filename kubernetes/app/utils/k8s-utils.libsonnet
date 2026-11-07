@@ -179,9 +179,6 @@ local gatewayUtils = import 'gateway-utils.libsonnet';
   getServiceHostname(serviceName):
     serviceName + '.corp.aetherrootr.com',
 
-  getWildcardCertificateName(namespace):
-    namespace + '-wildcard-certificate-tls',
-
   getPVCName(storageClass, namespace):
     storageClass + '-' + namespace + '-pvc',
 

@@ -6,7 +6,6 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   appName:: 'bazarr',
   replicas:: 1,
   port:: 6767,
-  certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.appName)],
 

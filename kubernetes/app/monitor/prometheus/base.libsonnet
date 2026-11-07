@@ -9,7 +9,6 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   thanosSidecarGrpcPort:: 10901,
   thanosSidecarHttpPort:: 10902,
   replicas:: 1,
-  certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
   rulesConfig:: null,
   withHomeAssistantToken:: false,
   disableThanosSidecar:: false,

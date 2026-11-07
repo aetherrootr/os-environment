@@ -6,7 +6,6 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   appName:: 'qbittorrent',
   replicas:: 1,
   port:: 8923,
-  certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
   urlPrefix:: 'torrent',
 
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.urlPrefix)],

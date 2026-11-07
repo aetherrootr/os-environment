@@ -16,7 +16,6 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
 
   local containerImage = "ghcr.io/immich-app/immich-server:" + $.immichVersion,
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.appName)],
-  local certificateName = k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
   local appEnv = std.prune([
     k8sUtils.generateEnv(name='DB_HOSTNAME', value=$.postgresDatabaseHost),

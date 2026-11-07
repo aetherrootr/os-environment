@@ -8,7 +8,6 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   databasePort:: error ('databasePort is required'),
   databaseName:: error ('databaseName is required'),
   databaseUser:: error ('databaseUser is required'),
-  certificateName:: $.namespace + '-authentik-certificate-tls',
 
   authentikHttpPort:: 9000,
   authentikMetricsPort:: 9300,

@@ -13,7 +13,6 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   image:: 'ghcr.io/open-webui/open-webui:v0.12.5',
   replicas:: 1,
 
-  local certificateName = k8sUtils.getWildcardCertificateName(namespace=$.namespace),
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.appName)],
   local appEnv = std.prune([
     k8sUtils.generateEnv(name='ENABLE_PERSISTENT_CONFIG', value='true'),

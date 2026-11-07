@@ -9,7 +9,6 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   databaseUser:: error ('databaseUser is required'),
   appSecretName:: error ('appSecretName is required'),
   port:: 8080,
-  certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
   replicas:: 1,
 
   local hosts = [k8sUtils.getServiceHostname(serviceName='finance')],

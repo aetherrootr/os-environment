@@ -6,7 +6,6 @@ local sqliteBackup = import 'utils/sqlite-backup.libsonnet';
   appName:: error ('appName is required'),
   replicas:: 1,
   port:: 5244,
-  certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
   local containerImage = 'openlistteam/openlist:v4.2.9-aio',
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.appName)],

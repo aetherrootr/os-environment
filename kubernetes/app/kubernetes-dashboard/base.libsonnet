@@ -5,7 +5,6 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   appName:: 'kubernetes-dashboard',
   replicas:: 1,
   port:: 9090,
-  certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.appName)],
 

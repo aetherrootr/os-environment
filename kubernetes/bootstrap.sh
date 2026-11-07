@@ -6,6 +6,7 @@ set -euo pipefail
 repo_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$repo_root"
 bootstrap_timeout=${BOOTSTRAP_TIMEOUT:-300s}
+certificate_timeout=${CERTIFICATE_TIMEOUT:-10m}
 
 for tool in kubectl tk jb helm; do
   command -v "$tool" >/dev/null || { echo "Required command is missing: $tool" >&2; exit 1; }
@@ -52,6 +53,23 @@ deploy kubernetes/app/bitwarden-secrets-manager/env/prod.jsonnet
 kubectl wait --for=condition=Established crd/bitwardensecrets.k8s.bitwarden.com --timeout="$bootstrap_timeout"
 kubectl -n bitwarden-secrets-manager rollout status \
   deployment/bw-sm-op-sm-operator-controller-manager --timeout="$bootstrap_timeout"
+
+echo 'Preparing shared Gateway certificates'
+deploy kubernetes/secrets/cloudflare-api-token-secret/env/prod.jsonnet
+kubectl -n cert-manager wait --for=create secret/cloudflare-api-token-secret --timeout="$bootstrap_timeout"
+kubectl -n cert-manager wait --for=jsonpath='{.data.api-token}' \
+  secret/cloudflare-api-token-secret --timeout="$bootstrap_timeout"
+deploy kubernetes/app/cert-manager/letsencrypt/env/prod.jsonnet
+kubectl wait --for=condition=Ready clusterissuer/letsencrypt-dns-cloudflare --timeout="$bootstrap_timeout"
+deploy kubernetes/certificates/corp.aetherrootr.com/namespaces/edge-gateway.jsonnet
+deploy kubernetes/certificates/authentik.aetherrootr.com/namespaces/edge-gateway.jsonnet
+kubectl -n edge-gateway wait --for=condition=Ready \
+  certificate/edge-wildcard-certificate \
+  certificate/edge-gateway-authentik-certificate --timeout="$certificate_timeout"
+kubectl -n edge-gateway wait --for=condition=Programmed \
+  gateway/edge-gateway --timeout="$bootstrap_timeout"
+
+echo 'Preparing Argo CD credentials'
 for secret in argocd-secret argocd-redis argocd-notifications-secret; do
   deploy "kubernetes/secrets/$secret/env/prod.jsonnet"
   kubectl -n argocd wait --for=create "secret/$secret" --timeout="$bootstrap_timeout"

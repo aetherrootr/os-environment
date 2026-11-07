@@ -5,7 +5,6 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   appName:: error ('appName is required'),
   replicas:: 1,
   port:: 9501,
-  certificateName:: k8sUtils.getWildcardCertificateName(namespace=$.namespace),
 
   local containerImage = 'ghcr.io/jonnyan404/cloud-clipboard-go:v4.5.12',
   local hosts = [k8sUtils.getServiceHostname(serviceName='clipboard')],

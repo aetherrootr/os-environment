@@ -36,9 +36,10 @@ Start with a working Kubernetes cluster configured by [Ansible](../ansible/doc/k
 (including Calico, Envoy Gateway and cert-manager), and local `kubectl`, `tk`, `jb`
 and Helm commands. Review the node names in `node/proxmox/node-groups.libsonnet`,
 NFS exports/data in `volume/`, and the existing Bitwarden secret IDs before starting.
-Ansible installs the shared `edge-gateway/edge-gateway` Gateway. Bootstrap issues
-its wildcard and Authentik certificates through the `certificates/` entries;
-both TLS Secrets live in `edge-gateway`.
+Ansible installs Envoy Gateway and its infrastructure configuration. Bootstrap
+issues the wildcard and Authentik certificates, then applies the shared
+`edge-gateway/edge-gateway` Gateway and its listeners through Jsonnet under
+[`certificates/`](certificates/README.md). Both TLS Secrets live in `edge-gateway`.
 Merge these definitions into remote `master` first: Argo CD reads that branch,
 including the dependency lock files.
 
@@ -68,8 +69,8 @@ including the dependency lock files.
 The script checks that the manually provisioned access tokens exist before
 applying resources. It applies namespaces, node configuration, RBAC and static
 volumes; installs Bitwarden operator; prepares the Cloudflare DNS credential and
-ClusterIssuer; waits for both edge certificates, the Gateway and Argo CD
-credentials; then installs Argo CD with its Tanka plugin and
+ClusterIssuer; waits for both edge certificates; applies the Gateway and waits
+for it and Argo CD credentials; then installs Argo CD with its Tanka plugin and
 bootstraps the registration root. It applies
 resources without interactive confirmation. Argo CD subsequently maintains the
 workloads and business `BitwardenSecret` mappings from Git. Secret values remain
@@ -78,22 +79,13 @@ for their Secrets while the operator reconciles.
 
 Namespaces, nodes, RBAC and volumes alone cannot start this chain: the operator,
 access tokens and Argo CD installation are also required. Argo CD's own credentials
-remain independently bootstrapped to avoid self-management. The two edge
-Certificates are applied by bootstrap and renewed by cert-manager; they are not
-registered as Argo CD Applications. Argo CD adopts the ClusterIssuer and
-Cloudflare credential mapping after bootstrap. Additional public
-certificates belong in `edge-gateway`. Each HTTPS listener specifies a hostname
-and exactly one certificate Secret: `https` binds `*.corp.aetherrootr.com` to the
-wildcard certificate, and `https-authentik` binds `authentik.aetherrootr.com` to
-the Authentik certificate. HTTPRoutes explicitly select their listener through
-`parentRefs.sectionName`; the shared helper defaults to `https`, while Authentik
-sets `httpsListener='https-authentik'`. SNI still selects the matching listener
-during the TLS handshake. Additional certificate domains need their own listener
-and explicit route attachment. Applications covered by the wildcard only need
-an HTTPRoute;
-they do not need a certificate in their own namespace. Application-internal TLS
-and mTLS certificates remain separate. Certificate readiness defaults to a
-10-minute timeout, configurable with `CERTIFICATE_TIMEOUT`.
+remain independently bootstrapped to avoid self-management. The edge Gateway and
+its two Certificates are applied by bootstrap and are not registered as Argo CD
+Applications; cert-manager renews the certificates. Argo CD adopts the
+ClusterIssuer and Cloudflare credential mapping after bootstrap. See the
+[certificate and listener configuration](certificates/README.md) for domain
+bindings and subsequent changes. Certificate readiness defaults to a 10-minute
+timeout, configurable with `CERTIFICATE_TIMEOUT`.
 The root Application automatically maintains application/project registrations
 from `master`, including changes to the application and Secret lists. Its own
 Application and AppProject are initially created through

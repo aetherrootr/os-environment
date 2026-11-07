@@ -168,12 +168,12 @@ local gatewayUtils = import 'gateway-utils.libsonnet';
   getAuthProxyOutpostServiceUrl(appName, namespace):
     'http://' + $.getAuthProxyOutpostAppName(appName) + '.' + namespace + '.svc.cluster.local:9000',
 
-  generateHTTPRoutes(namespace, appName, serviceName, port, hostnameList,
+  generateHTTPRoutes(namespace, appName, serviceName, port, hostnameList, httpsListener,
                      tls=true, withAuthProxy=false, basicAuthSecret=null,
-                     rules=null, requestTimeout='0s', extraLabels={}, httpsListener='https'):
+                     rules=null, requestTimeout='0s', extraLabels={}):
     gatewayUtils.routes(
-      namespace, appName, serviceName, port, hostnameList,
-      tls, withAuthProxy, basicAuthSecret, rules, requestTimeout, extraLabels, httpsListener
+      namespace, appName, serviceName, port, hostnameList, httpsListener,
+      tls, withAuthProxy, basicAuthSecret, rules, requestTimeout, extraLabels
     ),
 
   getServiceHostname(serviceName):

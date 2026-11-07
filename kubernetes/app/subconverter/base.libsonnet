@@ -50,6 +50,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       appName=$.appName,
       serviceName=$.appName,
       port=$.port,
+      httpsListener='https-wildcard',
       hostnameList=hosts,
       rules=[
         (import 'utils/gateway-utils.libsonnet').rule('/', $.appName, $.port, pathType='Exact', rewrite='/sub'),

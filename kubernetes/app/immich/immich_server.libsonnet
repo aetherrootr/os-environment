@@ -98,6 +98,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       serviceName=$.appName,
       requestTimeout='900s',
       port=$.immichServerPort,
+      httpsListener='https-wildcard',
       hostnameList=hosts,
     ),
   ]),

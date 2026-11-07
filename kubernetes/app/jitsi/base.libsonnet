@@ -40,6 +40,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
     appName=$.appName,
     serviceName=$.appName + '-jitsi-meet-web',
     port=80,
+    httpsListener='https-wildcard',
     hostnameList=[host],
   ),
 

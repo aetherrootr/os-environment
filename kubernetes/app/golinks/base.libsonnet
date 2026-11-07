@@ -72,6 +72,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       appName=$.appName,
       serviceName=$.appName,
       port=$.port,
+      httpsListener=null,
       hostnameList=hosts,
       tls=false,
     ),

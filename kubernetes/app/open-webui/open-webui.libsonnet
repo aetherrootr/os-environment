@@ -79,6 +79,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       serviceName=$.appName,
       requestTimeout='3600s',
       port=$.port,
+      httpsListener='https-wildcard',
       hostnameList=hosts,
     ),
   ]),

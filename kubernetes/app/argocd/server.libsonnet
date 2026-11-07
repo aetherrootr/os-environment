@@ -351,6 +351,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       appName='argocd',
       serviceName=$.appName,
       port=80,
+      httpsListener='https-wildcard',
       hostnameList=[$.hostname],
     ),
   ],

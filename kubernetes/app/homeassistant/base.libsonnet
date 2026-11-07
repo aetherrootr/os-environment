@@ -126,6 +126,7 @@ local homeassistantConfig = importstr 'config/configuration.yaml';
       appName=$.appName,
       serviceName=$.appName,
       port=$.port,
+      httpsListener='https-wildcard',
       hostnameList=hosts,
     ),
   ] + sqliteBackupResources.cron),

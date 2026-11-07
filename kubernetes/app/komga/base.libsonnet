@@ -114,6 +114,7 @@ local sqliteBackup = import 'utils/sqlite-backup.libsonnet';
       appName=$.appName,
       serviceName=$.appName,
       port=$.port,
+      httpsListener='https-wildcard',
       hostnameList=hosts,
     ),
   ] + sqliteBackupResources.cron),

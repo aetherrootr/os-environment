@@ -1,4 +1,4 @@
-// Shared edge Gateway is installed by the Ansible k8s_common role.
+// Shared edge Gateway and listeners are managed under kubernetes/certificates.
 {
   gatewayName: 'edge-gateway',
   gatewayNamespace: 'edge-gateway',
@@ -12,9 +12,11 @@
     } } }],
   }),
 
-  routes(namespace, appName, serviceName, port, hostnameList,
+  routes(namespace, appName, serviceName, port, hostnameList, httpsListener,
          tls=true, withAuthProxy=false, basicAuthSecret=null,
-         rules=null, requestTimeout='0s', extraLabels={}, httpsListener='https'):
+         rules=null, requestTimeout='0s', extraLabels={}):
+    assert !(tls || withAuthProxy) || (std.type(httpsListener) == 'string' && std.length(httpsListener) > 0)
+      : 'httpsListener must name an HTTPS listener';
     local metadata(name) = { name: name, namespace: namespace, labels: { app: appName } + extraLabels };
     local route(name, listener, routeRules) = {
       apiVersion: 'gateway.networking.k8s.io/v1', kind: 'HTTPRoute',

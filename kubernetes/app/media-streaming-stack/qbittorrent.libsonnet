@@ -105,6 +105,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       appName=$.appName,
       serviceName=$.appName,
       port=$.port,
+      httpsListener='https-wildcard',
       hostnameList=hosts,
       withAuthProxy=true,
     ),
@@ -114,6 +115,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       basicAuthSecret='qbittorrent-secret',
       serviceName=$.appName,
       port=$.port,
+      httpsListener='https-wildcard',
       hostnameList=[
         k8sUtils.getServiceHostname(serviceName=$.appName + '-api'),
       ],

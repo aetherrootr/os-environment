@@ -84,6 +84,7 @@ local settings = importstr 'config/settings.yml';
       appName=$.appName,
       serviceName=$.appName,
       port=$.port,
+      httpsListener='https-wildcard',
       hostnameList=hosts,
     ),
   ]),

@@ -32,7 +32,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
     ],
   ),
 
-  resources: [
+  zenBillJob: std.prune([
     k8sUtils.generateJob(
       namespace=$.namespace,
       appName=$.appName + '-install-zen-billing',
@@ -56,5 +56,5 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
         }],
       ),
     ),
-  ],
+  ]),
 }

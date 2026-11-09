@@ -69,7 +69,7 @@ local zenBilling = import 'zen-billing.libsonnet';
     postgresResources.postgres +
     openWebuiResources.openWebui +
     openTerminalResources.openTerminal +
-    billingResources.resources +
+    billingResources.zenBillJob +
     networkPolicyResources.networkPolicy
   ),
 }

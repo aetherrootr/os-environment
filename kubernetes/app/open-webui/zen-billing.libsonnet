@@ -32,8 +32,6 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
     ],
   ),
 
-  // Application code is released independently in open-webui-zen-billing.
-  // Publish this version before merging the deployment change to master.
   resources: [
     k8sUtils.generateJob(
       namespace=$.namespace,

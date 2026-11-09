@@ -16,6 +16,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.appName)],
   local appEnv = std.prune([
     k8sUtils.generateEnv(name='ENABLE_PERSISTENT_CONFIG', value='true'),
+    k8sUtils.generateEnv(name='BYPASS_MODEL_ACCESS_CONTROL', value='true'),
     k8sUtils.generateEnv(name='WEBUI_SECRET_KEY_FILE', value='/app/backend/data/.webui_secret_key'),
     k8sUtils.generateEnv(name='WEBUI_URL', value='https://' + hosts[0]),
     k8sUtils.generateSecretEnv(name='DATABASE_PASSWORD', secretName=$.databasePasswordSecretName, key='password'),

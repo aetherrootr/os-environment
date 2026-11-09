@@ -1,0 +1,63 @@
+local k8sUtils = import 'utils/k8s-utils.libsonnet';
+
+{
+  namespace:: error 'namespace is required',
+  appName:: error 'appName is required',
+  billingImage:: error 'billingImage is required',
+  imagePullSecrets:: [],
+  databaseHost:: error 'databaseHost is required',
+  databasePort:: error 'databasePort is required',
+  databaseName:: error 'databaseName is required',
+  databaseUser:: error 'databaseUser is required',
+  databasePasswordSecretName:: error 'databasePasswordSecretName is required',
+
+  // Application code is released independently in open-webui-zen-billing.
+  // Publish this version before merging the deployment change to master.
+  resources: [{
+    apiVersion: 'batch/v1',
+    kind: 'Job',
+    metadata: {
+      name: $.appName + '-install-zen-billing',
+      namespace: $.namespace,
+      annotations: {
+        'argocd.argoproj.io/hook': 'PostSync',
+        'argocd.argoproj.io/hook-delete-policy': 'BeforeHookCreation,HookSucceeded',
+      },
+    },
+    spec: {
+      backoffLimit: 2,
+      activeDeadlineSeconds: 600,
+      template: {
+        metadata: { labels: { app: $.appName + '-billing-installer' } },
+        spec: {
+          restartPolicy: 'Never',
+          automountServiceAccountToken: false,
+          imagePullSecrets: $.imagePullSecrets,
+          containers: [{
+            name: 'install',
+            image: $.billingImage,
+            env: [
+              k8sUtils.generateEnv('WEBUI_INTERNAL_URL', 'http://' + $.appName + ':8080'),
+              k8sUtils.generateEnv('WEBUI_SECRET_KEY_FILE', '/app/backend/data/.webui_secret_key'),
+              k8sUtils.generateSecretEnv('DATABASE_PASSWORD', $.databasePasswordSecretName, 'password'),
+              k8sUtils.generateEnv('DATABASE_URL', 'postgresql://' + $.databaseUser + ':$(DATABASE_PASSWORD)@' + $.databaseHost + ':' + std.toString($.databasePort) + '/' + $.databaseName),
+            ],
+            resources: {
+              requests: { cpu: '100m', memory: '256Mi' },
+              limits: { cpu: '1000m', memory: '1Gi' },
+            },
+            volumeMounts: [
+              { name: 'data', mountPath: '/app/backend/data', subPath: $.appName, readOnly: true },
+            ],
+          }],
+          volumes: [{
+            name: 'data',
+            persistentVolumeClaim: {
+              claimName: k8sUtils.getPVCName(namespace=$.namespace, storageClass='service-data'),
+            },
+          }],
+        },
+      },
+    },
+  }],
+}

@@ -2,6 +2,7 @@ local networkPolicy = import 'network-policy.libsonnet';
 local openTerminal = import 'open-terminal.libsonnet';
 local openWebui = import 'open-webui.libsonnet';
 local postgres = import 'postgres.libsonnet';
+local zenBilling = import 'zen-billing.libsonnet';
 
 {
   namespace:: error ('namespace is required'),
@@ -13,6 +14,8 @@ local postgres = import 'postgres.libsonnet';
   databaseName:: 'open_webui',
   databaseUser:: 'open_webui',
   databasePasswordSecretName:: $.appName + '-postgres-secret',
+  billingImage:: 'ghcr.io/aetherrootr/open-webui-zen-billing:v0.1.0',
+  billingImagePullSecrets:: [],
   openTerminalAppName:: 'open-terminal',
   openTerminalPort:: 8000,
 
@@ -45,6 +48,18 @@ local postgres = import 'postgres.libsonnet';
     port: $.openTerminalPort,
   },
 
+  local billingResources = zenBilling {
+    namespace: $.namespace,
+    appName: $.appName,
+    billingImage: $.billingImage,
+    imagePullSecrets: $.billingImagePullSecrets,
+    databaseHost: $.databaseHost,
+    databasePort: $.databasePort,
+    databaseName: $.databaseName,
+    databaseUser: $.databaseUser,
+    databasePasswordSecretName: $.databasePasswordSecretName,
+  },
+
   local networkPolicyResources = networkPolicy {
     namespace: $.namespace,
     openWebuiAppName: $.appName,
@@ -58,6 +73,7 @@ local postgres = import 'postgres.libsonnet';
     postgresResources.postgres +
     openWebuiResources.openWebui +
     openTerminalResources.openTerminal +
+    billingResources.resources +
     networkPolicyResources.networkPolicy
   ),
 }

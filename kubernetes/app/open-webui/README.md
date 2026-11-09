@@ -13,9 +13,9 @@ Before merging this deployment change:
 
 1. Push the component repository and its `v0.1.0` tag.
 2. Wait for its GitHub Actions tests and GHCR publication to succeed.
-3. Confirm the image path in `base.libsonnet` matches the actual repository. Use
+3. Confirm the image path in `zen-billing.libsonnet` matches the actual repository. Use
    a digest for immutable production pinning if available.
-4. If the GHCR package is private, set `billingImagePullSecrets` to the cluster's
+4. If the GHCR package is private, set `imagePullSecrets` in `zen-billing.libsonnet` to the cluster's
    existing pull Secret names, using `{ name: '...' }` entries. Keep credentials
    in Bitwarden/Kubernetes Secrets, never Git.
 5. Review the deployment PR and merge manually. Argo CD follows `master`.

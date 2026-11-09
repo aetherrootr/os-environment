@@ -14,8 +14,6 @@ local zenBilling = import 'zen-billing.libsonnet';
   databaseName:: 'open_webui',
   databaseUser:: 'open_webui',
   databasePasswordSecretName:: $.appName + '-postgres-secret',
-  billingImage:: 'ghcr.io/aetherrootr/open-webui-zen-billing:v0.1.0',
-  billingImagePullSecrets:: [],
   openTerminalAppName:: 'open-terminal',
   openTerminalPort:: 8000,
 
@@ -51,8 +49,6 @@ local zenBilling = import 'zen-billing.libsonnet';
   local billingResources = zenBilling {
     namespace: $.namespace,
     appName: $.appName,
-    billingImage: $.billingImage,
-    imagePullSecrets: $.billingImagePullSecrets,
     databaseHost: $.databaseHost,
     databasePort: $.databasePort,
     databaseName: $.databaseName,

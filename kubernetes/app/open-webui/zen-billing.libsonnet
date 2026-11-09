@@ -3,8 +3,6 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
 {
   namespace:: error 'namespace is required',
   appName:: error 'appName is required',
-  billingImage:: error 'billingImage is required',
-  imagePullSecrets:: [],
   databaseHost:: error 'databaseHost is required',
   databasePort:: error 'databasePort is required',
   databaseName:: error 'databaseName is required',
@@ -13,7 +11,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
 
   local containers = k8sUtils.generateContainers(
     containerName='install',
-    image=$.billingImage,
+    image='ghcr.io/aetherrootr/open-webui-zen-billing:v0.1.0',
     env=[
       k8sUtils.generateEnv('WEBUI_INTERNAL_URL', 'http://' + $.appName + ':8080'),
       k8sUtils.generateEnv('WEBUI_SECRET_KEY_FILE', '/app/backend/data/.webui_secret_key'),
@@ -51,7 +49,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       podSpec=k8sUtils.generatePodSpec(
         restartPolicy='Never',
         automountServiceAccountToken=false,
-        imagePullSecrets=$.imagePullSecrets,
+        imagePullSecrets=[],
         volumes=[{
           name: 'data',
           persistentVolumeClaim: {

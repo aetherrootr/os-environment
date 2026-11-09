@@ -46,8 +46,6 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
       },
       podSpec=k8sUtils.generatePodSpec(
         restartPolicy='Never',
-        automountServiceAccountToken=false,
-        imagePullSecrets=[],
         volumes=[{
           name: 'data',
           persistentVolumeClaim: {

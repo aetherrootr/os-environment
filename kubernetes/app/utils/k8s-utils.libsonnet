@@ -127,9 +127,7 @@ local gatewayUtils = import 'gateway-utils.libsonnet';
     serviceAccountName=null,
     hostNetwork=false,
     tolerations=null,
-    affinity=null,
-    imagePullSecrets=null,
-    automountServiceAccountToken=null
+    affinity=null
   ):
     $.tk.podSpec.withRestartPolicy(restartPolicy)
     + $.tk.podSpec.withDnsPolicy(dnsPolicy)
@@ -137,8 +135,6 @@ local gatewayUtils = import 'gateway-utils.libsonnet';
     + (if initContainers != null then $.tk.podSpec.withInitContainers(initContainers) else {})
     + (if nodeSelector != null then $.tk.podSpec.withNodeSelector(nodeSelector) else {})
     + (if affinity != null then { affinity: affinity } else {})
-    + (if imagePullSecrets != null then $.tk.podSpec.withImagePullSecrets(imagePullSecrets) else {})
-    + (if automountServiceAccountToken != null then $.tk.podSpec.withAutomountServiceAccountToken(automountServiceAccountToken) else {})
     + (if nodeName != null then $.tk.podSpec.withNodeName(nodeName) else {})
     + (if serviceAccountName != null then $.tk.podSpec.withServiceAccountName(serviceAccountName) else {})
     + (if hostNetwork == true then $.tk.podSpec.withHostNetwork(hostNetwork) else {})

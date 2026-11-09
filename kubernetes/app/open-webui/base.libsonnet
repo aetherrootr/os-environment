@@ -2,6 +2,7 @@ local networkPolicy = import 'network-policy.libsonnet';
 local openTerminal = import 'open-terminal.libsonnet';
 local openWebui = import 'open-webui.libsonnet';
 local postgres = import 'postgres.libsonnet';
+local zenBilling = import 'zen-billing.libsonnet';
 
 {
   namespace:: error ('namespace is required'),
@@ -45,6 +46,16 @@ local postgres = import 'postgres.libsonnet';
     port: $.openTerminalPort,
   },
 
+  local billingResources = zenBilling {
+    namespace: $.namespace,
+    appName: $.appName,
+    databaseHost: $.databaseHost,
+    databasePort: $.databasePort,
+    databaseName: $.databaseName,
+    databaseUser: $.databaseUser,
+    databasePasswordSecretName: $.databasePasswordSecretName,
+  },
+
   local networkPolicyResources = networkPolicy {
     namespace: $.namespace,
     openWebuiAppName: $.appName,
@@ -58,6 +69,7 @@ local postgres = import 'postgres.libsonnet';
     postgresResources.postgres +
     openWebuiResources.openWebui +
     openTerminalResources.openTerminal +
+    billingResources.zenBillJob +
     networkPolicyResources.networkPolicy
   ),
 }

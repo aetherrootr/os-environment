@@ -222,6 +222,29 @@ local gatewayUtils = import 'gateway-utils.libsonnet';
       name, chart, config
     ),
 
+  generateJob(namespace,
+              appName,
+              podSpec,
+              containers,
+              backoffLimit=3,
+              activeDeadlineSeconds=null,
+              annotations=null,
+              extraLabels={}):
+    $.tk.job.new(appName)
+    + defaultMetadata(appName, namespace, extraLabels)
+    + $.tk.job.spec.withBackoffLimit(backoffLimit)
+    + $.tk.job.spec.template.metadata.withLabels({ app: appName } + extraLabels)
+    + $.tk.job.spec.template.spec.withContainers([containers])
+    + (if activeDeadlineSeconds != null then $.tk.job.spec.withActiveDeadlineSeconds(activeDeadlineSeconds) else {})
+    + (if annotations != null then $.tk.job.metadata.withAnnotations(annotations) else {})
+    + {
+      spec+: {
+        template+: {
+          spec+: podSpec,
+        },
+      },
+    },
+
   generateCronJob(namespace,
                   appName,
                   jobSpec,

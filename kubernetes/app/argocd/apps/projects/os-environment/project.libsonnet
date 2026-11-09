@@ -32,6 +32,7 @@
     { group: 'apps', kind: 'Deployment' },
     { group: 'apps', kind: 'StatefulSet' },
     { group: 'batch', kind: 'CronJob' },
+    { group: 'batch', kind: 'Job' },
     { group: 'crd.projectcalico.org', kind: 'NetworkPolicy' },
     { group: 'k8s.bitwarden.com', kind: 'BitwardenSecret' },
     { group: 'gateway.networking.k8s.io', kind: 'HTTPRoute' },

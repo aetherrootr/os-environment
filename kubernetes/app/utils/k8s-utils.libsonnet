@@ -127,7 +127,9 @@ local gatewayUtils = import 'gateway-utils.libsonnet';
     serviceAccountName=null,
     hostNetwork=false,
     tolerations=null,
-    affinity=null
+    affinity=null,
+    imagePullSecrets=null,
+    automountServiceAccountToken=null
   ):
     $.tk.podSpec.withRestartPolicy(restartPolicy)
     + $.tk.podSpec.withDnsPolicy(dnsPolicy)
@@ -135,6 +137,8 @@ local gatewayUtils = import 'gateway-utils.libsonnet';
     + (if initContainers != null then $.tk.podSpec.withInitContainers(initContainers) else {})
     + (if nodeSelector != null then $.tk.podSpec.withNodeSelector(nodeSelector) else {})
     + (if affinity != null then { affinity: affinity } else {})
+    + (if imagePullSecrets != null then $.tk.podSpec.withImagePullSecrets(imagePullSecrets) else {})
+    + (if automountServiceAccountToken != null then $.tk.podSpec.withAutomountServiceAccountToken(automountServiceAccountToken) else {})
     + (if nodeName != null then $.tk.podSpec.withNodeName(nodeName) else {})
     + (if serviceAccountName != null then $.tk.podSpec.withServiceAccountName(serviceAccountName) else {})
     + (if hostNetwork == true then $.tk.podSpec.withHostNetwork(hostNetwork) else {})
@@ -221,6 +225,29 @@ local gatewayUtils = import 'gateway-utils.libsonnet';
     tankaUtils.helm.new(projectPath).template(
       name, chart, config
     ),
+
+  generateJob(namespace,
+              appName,
+              podSpec,
+              containers,
+              backoffLimit=3,
+              activeDeadlineSeconds=null,
+              annotations=null,
+              extraLabels={}):
+    $.tk.job.new(appName)
+    + defaultMetadata(appName, namespace, extraLabels)
+    + $.tk.job.spec.withBackoffLimit(backoffLimit)
+    + $.tk.job.spec.template.metadata.withLabels({ app: appName } + extraLabels)
+    + $.tk.job.spec.template.spec.withContainers([containers])
+    + (if activeDeadlineSeconds != null then $.tk.job.spec.withActiveDeadlineSeconds(activeDeadlineSeconds) else {})
+    + (if annotations != null then $.tk.job.metadata.withAnnotations(annotations) else {})
+    + {
+      spec+: {
+        template+: {
+          spec+: podSpec,
+        },
+      },
+    },
 
   generateCronJob(namespace,
                   appName,

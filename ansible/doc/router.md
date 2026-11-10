@@ -32,6 +32,13 @@ dnsUtils.generateDNSAlias('authentik.aetherrootr.com', 'edge-router.corp.aetherr
 Add new record files to the imports and combined array in `dns/config.jsonnet`.
 Change shared defaults in `dns/utils.libsonnet`.
 
+The whole `corp.aetherrootr.com` zone is local to dnsmasq. OpenClash forwards
+this zone to the router, so forwarding unknown names back to OpenClash would
+create a DNS loop. Keep `local=/corp.aetherrootr.com/` in the shared defaults
+so undeclared names (including DNS service discovery queries) return NXDOMAIN
+immediately. Public application names outside this zone remain local only for
+their explicitly declared names and subdomains.
+
 ```sh
 # Render locally.
 tk eval dns/config.jsonnet

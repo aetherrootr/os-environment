@@ -15,6 +15,12 @@
     '# Edit: ansible/dns/*.libsonnet and ansible/dns/config.jsonnet.',
     // Static DNS comes from this configuration, not the router's /etc/hosts.
     'no-hosts',
+    // Resolve corp.aetherrootr.com and all its subdomains locally; no '*' is needed.
+    // Declared names keep their configured addresses or aliases. Undeclared names
+    // return NXDOMAIN immediately; this does not map every name to the same IP.
+    // OpenClash forwards this zone to dnsmasq, so forwarding unknown names back
+    // to OpenClash would create a loop that ends only when the query times out.
+    'local=/corp.aetherrootr.com/',
     'local-ttl=60',
     'host-record=localhost,127.0.0.1,::1',
   ],

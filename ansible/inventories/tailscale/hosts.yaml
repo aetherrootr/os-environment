@@ -1,0 +1,24 @@
+---
+tailscale_nodes:
+  vars:
+    ansible_user: aether
+    ansible_python_interpreter: /usr/bin/python3
+    ansible_ssh_common_args: -o BatchMode=yes
+  hosts:
+    # Node-side source policy is prepared first; router integration is maintained manually.
+    tailscale-exit-node.corp.aetherrootr.com:
+      tailscale_login_server: https://controlplane.tailscale.com
+      tailscale_source_policy_enabled: true
+      tailscale_subnet_routes: [192.168.8.0/24]
+    tailscale-backup-exit-node.corp.aetherrootr.com:
+      tailscale_login_server: https://hs.aetherrootr.com
+      tailscale_source_policy_enabled: true
+      tailscale_subnet_routes: [192.168.8.0/24]
+    tailscale-exit-node-1.corp.aetherrootr.com:
+      tailscale_login_server: https://controlplane.tailscale.com
+      tailscale_source_policy_enabled: true
+      tailscale_subnet_routes: [192.168.8.0/24]
+    tailscale-backup-exit-node-1.corp.aetherrootr.com:
+      tailscale_login_server: https://hs.aetherrootr.com
+      tailscale_source_policy_enabled: true
+      tailscale_subnet_routes: [192.168.8.0/24]

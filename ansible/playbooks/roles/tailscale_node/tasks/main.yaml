@@ -1,0 +1,115 @@
+---
+- name: Require a supported Linux platform
+  ansible.builtin.assert:
+    that:
+      - ansible_facts.os_family == 'Debian'
+      - ansible_facts.service_mgr == 'systemd'
+
+- name: Install the required packages
+  ansible.builtin.apt:
+    name: [ca-certificates, python3, bash, jq, procps, iproute2, iptables]
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+    policy_rc_d: 101
+
+- name: Install the official Tailscale repository key
+  ansible.builtin.get_url:
+    url: "https://pkgs.tailscale.com/stable/{{ ansible_facts.distribution | lower }}/{{ ansible_facts.distribution_release }}.noarmor.gpg"
+    dest: /usr/share/keyrings/tailscale-archive-keyring.gpg
+    mode: '0644'
+
+- name: Configure the official stable repository
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list.d/tailscale.list
+    mode: '0644'
+    backup: true
+    content: |
+      deb [signed-by=/usr/share/keyrings/tailscale-archive-keyring.gpg] https://pkgs.tailscale.com/stable/{{ ansible_facts.distribution | lower }} {{ ansible_facts.distribution_release }} main
+  register: tailscale_repository
+
+- name: Install Tailscale without starting it or authenticating
+  ansible.builtin.apt:
+    name: tailscale
+    state: present
+    update_cache: true
+    cache_valid_time: "{{ 0 if tailscale_repository.changed else 3600 }}"
+    policy_rc_d: 101
+
+- name: Prepare the standard exit-node forwarding settings
+  ansible.builtin.copy:
+    dest: /etc/sysctl.d/99-tailscale-forwarding.conf
+    mode: '0644'
+    content: |
+      # Keep IPv6 router advertisements working when forwarding is enabled.
+      net/ipv6/conf/{{ ansible_facts.default_ipv6.interface | default(ansible_facts.default_ipv4.interface) }}/accept_ra = 2
+      net.ipv4.ip_forward = 1
+      net.ipv6.conf.all.forwarding = 1
+
+- name: Prepare the optional dedicated source policy
+  when: tailscale_source_policy_enabled | bool
+  block:
+    - name: Install the source-policy locking utility
+      ansible.builtin.apt:
+        name: util-linux
+        state: present
+        policy_rc_d: 101
+
+    - name: Install the small node network helper
+      ansible.builtin.copy:
+        src: tailscale-source.sh
+        dest: /usr/local/sbin/tailscale-source.sh
+        owner: root
+        group: root
+        mode: '0755'
+        validate: /bin/bash -n %s
+
+    - name: Install the node source-policy service without enabling it
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/tailscale-source.service
+        mode: '0644'
+        content: |
+          [Unit]
+          Description=Tailscale node source policy
+          Wants=network-online.target
+          After=network-online.target
+          Before=tailscaled.service
+          [Service]
+          ExecStartPre=/bin/bash /usr/local/sbin/tailscale-source.sh apply
+          ExecStart=/bin/bash /usr/local/sbin/tailscale-source.sh watch
+          ExecStop=/bin/bash /usr/local/sbin/tailscale-source.sh remove
+          Restart=on-failure
+          RestartSec=5
+          [Install]
+          RequiredBy=tailscaled.service
+
+    - name: Prepare the daemon service override directory
+      ansible.builtin.file:
+        path: /etc/systemd/system/tailscaled.service.d
+        state: directory
+        mode: '0755'
+
+    - name: Keep the source policy ahead of Tailscale masquerading after daemon restarts
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/tailscaled.service.d/source-policy.conf
+        mode: '0644'
+        content: |
+          [Service]
+          ExecStartPost=/bin/sh -c 'if systemctl is-enabled --quiet tailscale-source.service; then exec /bin/bash /usr/local/sbin/tailscale-source.sh apply; fi'
+
+- name: Reload unit definitions without starting services
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+
+- name: Find the maintainer home directory
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ tailscale_maintainer }}"
+
+- name: Provide the manual authentication and startup entry point
+  ansible.builtin.template:
+    src: start-tailscale-node.sh.j2
+    dest: "{{ ansible_facts.getent_passwd[tailscale_maintainer][4] }}/start-tailscale-node.sh"
+    owner: "{{ tailscale_maintainer }}"
+    group: "{{ ansible_facts.getent_passwd[tailscale_maintainer][2] }}"
+    mode: '0750'

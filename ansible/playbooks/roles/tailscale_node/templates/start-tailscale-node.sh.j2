@@ -1,0 +1,57 @@
+#!/bin/sh
+set -eu
+if [ "$(id -u)" -ne 0 ]; then
+    exec sudo "$0" "$@"
+fi
+
+systemctl daemon-reload
+{% if tailscale_source_policy_enabled | bool %}
+/bin/bash /usr/local/sbin/tailscale-source.sh check
+systemctl enable --now tailscale-source.service
+{% else %}
+# Switch an existing source-policy node back to ordinary exit-node operation.
+if systemctl is-enabled --quiet tailscale-source.service 2>/dev/null || \
+   systemctl is-active --quiet tailscale-source.service 2>/dev/null; then
+    systemctl stop tailscaled.service
+    systemctl disable --now tailscale-source.service
+fi
+{% endif %}
+sysctl -p /etc/sysctl.d/99-tailscale-forwarding.conf
+systemctl enable --now tailscaled.service
+
+normalize_login_server() {
+    # Tailscale treats the legacy login URL and an empty preference as the default.
+    case "${1%/}" in
+        ''|https://login.tailscale.com|https://controlplane.tailscale.com)
+            printf '%s\n' https://controlplane.tailscale.com ;;
+        *) printf '%s\n' "${1%/}" ;;
+    esac
+}
+login_server=$(normalize_login_server {{ tailscale_login_server | quote }})
+state=$(tailscale status --json | jq -er '.BackendState')
+case "$state" in
+    NeedsLogin|NoState)
+        tailscale login --login-server="$login_server"
+        ;;
+    *)
+        current=$(tailscale debug prefs | jq -r '.ControlURL // ""')
+        current=$(normalize_login_server "$current")
+        if [ "$current" != "$login_server" ]; then
+            printf 'Expected control server %s; existing node uses %s. Review manually before changing accounts.\n' \
+                "$login_server" "$current" >&2
+            exit 1
+        fi
+        ;;
+esac
+
+tailscale set --advertise-exit-node=true \
+    --accept-routes=false --netfilter-mode=on --snat-subnet-routes=true
+{% if tailscale_subnet_routes is not none %}
+tailscale set --advertise-routes={{ tailscale_subnet_routes | join(',') | quote }}
+{% endif %}
+tailscale up
+{% if tailscale_source_policy_enabled | bool %}
+# Replace existing transport connections so the new source rules take effect.
+systemctl restart tailscaled.service
+{% endif %}
+tailscale status

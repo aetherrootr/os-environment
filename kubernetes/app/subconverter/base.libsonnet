@@ -6,7 +6,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   replicas:: 1,
   port:: 25500,
 
-  local containerImage = 'ghcr.io/aetherrootr/subconverter-extended:v1.9.14',
+  local containerImage = 'ghcr.io/aetherrootr/subconverter-extended:v1.9.16',
   local hosts = [k8sUtils.getServiceHostname(serviceName=$.appName)],
 
 

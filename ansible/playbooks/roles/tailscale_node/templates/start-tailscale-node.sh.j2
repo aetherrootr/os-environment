@@ -1,0 +1,120 @@
+#!/bin/sh
+set -eu
+if [ "$(id -u)" -ne 0 ]; then
+    exec sudo "$0" "$@"
+fi
+
+wait_for_backend() {
+    attempt=0
+    while [ "$attempt" -lt 60 ]; do
+        state=$(tailscale status --json 2>/dev/null | jq -er '.BackendState // empty') || state=
+        case "$state" in
+            ''|NoState|Starting) ;;
+            *) return 0 ;;
+        esac
+        attempt=$((attempt + 1))
+        sleep 1
+    done
+    echo 'Tailscale did not finish starting within 60 seconds. Check: journalctl -u tailscaled -n 50' >&2
+    return 1
+}
+
+systemctl daemon-reload
+sysctl -p /etc/sysctl.d/99-tailscale-forwarding.conf
+{% if tailscale_source_policy_enabled | bool %}
+source_config=/etc/default/tailscale-source
+source_helper=/usr/local/sbin/tailscale-source.sh
+if [ ! -f "$source_config" ]; then
+    [ -t 0 ] || { echo 'Connect with ssh -t to prepare the DHCP identity.' >&2; exit 1; }
+    if systemctl is-active --quiet tailscale-source.service; then
+        echo 'The source policy is active but its configuration is missing. Restore the configuration before continuing.' >&2
+        exit 1
+    fi
+    [ ! -d "$source_config" ] || { echo "Configuration path is a directory: $source_config" >&2; exit 1; }
+    parent=$(ip -j -4 route show table main default | jq -er '
+        [.[] | select(.dev != null and .dev != "tailscale0" and .dev != "ts-source")] |
+        min_by(.metric // 0) | .dev // empty')
+    machine_id=$(cat /etc/machine-id)
+    parent_mac=$(cat "/sys/class/net/$parent/address")
+    mac=$(printf '%s\n' "$machine_id" "$parent_mac" tailscale-source |
+        sha256sum | cut -c1-10 | sed 's/../:&/g; s/^/02/')
+    printf 'Ordinary interface: %s\nDedicated DHCP interface: ts-source\nStable DHCP MAC: %s\n' "$parent" "$mac"
+    printf 'Request/reuse this additional DHCP lease? [y/N]: '
+    read -r answer || exit 1
+    case "$answer" in y|Y|[yY][eE][sS]) ;; *) echo 'Cancelled; configuration unchanged.'; exit 1 ;; esac
+    umask 077
+    temporary=$(mktemp "$(dirname "$source_config")/.tailscale-source-XXXXXX")
+    trap 'rm -f -- "$temporary"' 0
+    printf 'SOURCE_METHOD=dhcp\nSOURCE_MAC=%s\n' "$mac" > "$temporary"
+    TAILSCALE_SOURCE_CONFIG="$temporary" /bin/bash "$source_helper" prepare
+    info=$(TAILSCALE_SOURCE_CONFIG="$temporary" /bin/bash "$source_helper" check)
+    mv -f -- "$temporary" "$source_config"
+    printf '\nDHCP lease ready. Add this static DHCP reservation on your router:\n'
+    printf '  MAC:  %s\n  IPv4: %s\n' "$mac" "$(printf '%s\n' "$info" | jq -r '.source4')"
+    printf 'Current dedicated IPv6: %s\n' "$(printf '%s\n' "$info" | jq -r '.source6 | if . == "" then "not available yet" else . end')"
+    echo 'The node keeps using DHCP; no leased IP is pinned locally.'
+    echo 'DHCP identity prepared. Save the static lease on the router, then run this script again.'
+    exit 0
+fi
+/bin/bash "$source_helper" prepare
+/bin/bash "$source_helper" check
+systemctl enable --now tailscale-source.service
+{% else %}
+# Switch an existing source-policy node back to ordinary exit-node operation.
+if systemctl is-enabled --quiet tailscale-source.service 2>/dev/null || \
+   systemctl is-active --quiet tailscale-source.service 2>/dev/null; then
+    systemctl stop tailscaled.service
+    systemctl disable --now tailscale-source.service
+fi
+{% endif %}
+systemctl enable --now tailscaled.service
+
+normalize_login_server() {
+    # Tailscale treats the legacy login URL and an empty preference as the default.
+    case "${1%/}" in
+        ''|https://login.tailscale.com|https://controlplane.tailscale.com)
+            printf '%s\n' https://controlplane.tailscale.com ;;
+        *) printf '%s\n' "${1%/}" ;;
+    esac
+}
+login_server=$(normalize_login_server {{ tailscale_login_server | quote }})
+wait_for_backend
+case "$state" in
+    NeedsLogin)
+        tailscale login --login-server="$login_server"
+        ;;
+    *)
+        current=$(tailscale debug prefs | jq -r '.ControlURL // ""')
+        current=$(normalize_login_server "$current")
+        if [ "$current" != "$login_server" ]; then
+            printf 'Expected control server %s; existing node uses %s. Review manually before changing accounts.\n' \
+                "$login_server" "$current" >&2
+            exit 1
+        fi
+        ;;
+esac
+
+tailscale set --advertise-exit-node=true \
+    --accept-routes=false --netfilter-mode=on --snat-subnet-routes=true
+{% if tailscale_subnet_routes is not none %}
+tailscale set --advertise-routes={{ tailscale_subnet_routes | join(',') | quote }}
+{% endif %}
+# A running Headscale node does not need another `up`: some CLI versions
+# validate its default login server even when no flags are supplied.
+if [ "$(tailscale status --json | jq -er '.BackendState')" != Running ]; then
+    tailscale up
+fi
+{% if tailscale_source_policy_enabled | bool %}
+# Replace existing transport connections so the new source rules take effect.
+systemctl restart tailscaled.service
+{% endif %}
+wait_for_backend
+tailscale status
+{% if tailscale_source_policy_enabled | bool %}
+printf '\n%s\n' \
+    'Node source-address policy is active. Router/OpenClash setup is still required:' \
+    'Bypass only the dedicated transport source IPv4/IPv6 shown above; match its dedicated MAC where supported.' \
+    'Keep ordinary/business source addresses under the router proxy rules.' \
+    'A static DHCP reservation keeps the IPv4 stable; it does not configure proxy bypass.' \
+    'Verify IPv4, IPv6 and WebRTC egress from a client using this exit node.'
+{% endif %}

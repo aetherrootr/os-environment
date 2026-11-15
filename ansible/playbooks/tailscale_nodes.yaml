@@ -1,0 +1,7 @@
+---
+- name: Install Tailscale and the maintainer startup tools
+  hosts: tailscale_nodes
+  serial: 1
+  become: true
+  roles:
+    - tailscale_node

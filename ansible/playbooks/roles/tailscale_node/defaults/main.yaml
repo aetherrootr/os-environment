@@ -3,5 +3,5 @@ tailscale_maintainer: aether
 tailscale_login_server: https://controlplane.tailscale.com
 # null preserves existing subnet routes; set a list per host, or [] to clear them.
 tailscale_subnet_routes: null
-# Enable only for nodes that use manually assigned dedicated source addresses.
+# Enable for nodes that use dedicated source addresses.
 tailscale_source_policy_enabled: false

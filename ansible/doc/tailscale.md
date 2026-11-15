@@ -1,61 +1,69 @@
-# Tailscale 出口节点部署
+# Deploy Tailscale Exit Nodes
 
-在仓库的 `ansible/` 目录操作，提前安装 Ansible，并确保能通过
-`aether` 用户和现有 SSH 密钥连接节点。执行时需要节点的 sudo 密码。
+Run commands from the repository's `ansible/` directory. Install Ansible first
+and confirm SSH access as `aether` using your existing key. Have the node's
+sudo password ready.
 
-## 1. 确认节点清单
+## 1. Configure the inventory
 
-编辑 [inventories/tailscale/hosts.yaml](../inventories/tailscale/hosts.yaml)，使用节点域名。
+Edit [inventories/tailscale/hosts.yaml](../inventories/tailscale/hosts.yaml).
+Use domain names for node connections.
 
-- `tailscale_login_server`：当前 backup 节点使用自建 Headscale，其余使用 Tailscale 官方服务。
-- `tailscale_source_policy_enabled`：普通出口设为 `false`；当前四台使用专用源地址方案，设为 `true`。
-- `tailscale_subnet_routes`：填写该节点需要发布的子网；省略则保留现有设置，`[]` 表示清空。
+- `tailscale_login_server`: backup nodes use our Headscale server; the other nodes use the official Tailscale service.
+- `tailscale_source_policy_enabled`: use `false` for ordinary exit nodes. The current four nodes enable a dedicated DHCP identity with `true`.
+- `tailscale_subnet_routes`: subnets to advertise from this node. Omit to preserve existing routes, or use `[]` to clear them.
 
-## 2. 安装
+## 2. Install
 
-先部署一台，例如：
+Start with one node:
 
 ```sh
 ANSIBLE_ASK_PASS=false ansible-playbook \
-  -i inventories/tailscale/hosts.yaml playbooks/tailscale_nodes.yaml \
-  --limit tailscale-backup-exit-node-1.corp.aetherrootr.com -K --diff
+  -i inventories/tailscale/hosts.yaml playbooks/tailscale_nodes.yaml
 ```
 
-安装只准备软件、配置和启动脚本。认证与首次启动由维护者完成。
-部署全部四台时移除 `--limit` 参数；sudo 密码不同时逐台部署。
+Installation prepares the packages, configuration, and startup script.
+The maintainer handles authentication and initial startup.
+Deploy separately if their sudo passwords differ.
 
-## 3. 准备源地址并启动
+## 3. Request the additional lease
 
-通过 SSH 登录刚部署的节点：
+Connect to the node:
 
 ```sh
-ssh -t aether@tailscale-backup-exit-node-1.corp.aetherrootr.com
+ssh -t aether@node-name.corp.aetherrootr.com
 ```
 
-仅在 `tailscale_source_policy_enabled: true` 时需要以下准备：
-
-1. 手工将分配给该节点的专用 IPv4、IPv6 配置到出口网卡，并持久化。
-   IPv6 专用地址设置 `preferred_lft 0`，避免被普通连接默认选用。
-2. 运行 `sudoedit /etc/default/tailscale-source`，写入以下内容并替换占位值：
-
-   ```sh
-   SOURCE_IPV4=REPLACE_WITH_DEDICATED_IPV4
-   SOURCE_IPV6=REPLACE_WITH_DEDICATED_IPV6
-   ```
-
-在节点上执行：
+Run on the node:
 
 ```sh
 ~/start-tailscale-node.sh
 ```
 
-按提示输入 sudo 密码，并在需要时打开登录链接完成认证。
-若提示登录服务器不匹配，先核对清单与节点现有账号。
+Enter the sudo password. With source policy enabled and no saved configuration,
+confirm the additional DHCP identity. The startup script creates `ts-source`
+with a stable MAC, obtains a lease, and prints the IP and MAC. Startup pauses here.
+The node must use systemd-networkd for this mode.
+Initial preparation reloads networkd and may briefly interrupt existing connections.
 
-## 4. 确认可用
+On the router, manually reserve the printed IPv4 address for the printed MAC.
+The node continues using DHCP; leased addresses are never converted to local
+static addresses. IPv6 is learned through the router's RA/DHCPv6 configuration.
 
-运行 `tailscale status`，在对应控制端批准出口及子网路由。
-客户端选择该出口，检查网页和内网访问，再按相同步骤部署其余节点。
+## 4. Start and verify
 
-源地址和路由器规则均由维护者手工管理。可以先启用节点策略，再配置路由器；
-衔接期间可能短暂断网。路由器配套完成后，再验证 IPv4、IPv6 和 WebRTC 出口。
+Run `~/start-tailscale-node.sh` again. Complete the login link if authentication
+is required. If the control server does not match, check the inventory and the
+node's existing account before proceeding.
+
+Run `tailscale status` and approve the exit-node and subnet routes in the
+corresponding control server. Select the exit node on a client and test web
+and LAN access before repeating these steps for the remaining nodes.
+
+Source-address separation takes effect on the node. For Tailscale transport to
+use the router's real WAN egress, manually configure a router/OpenClash bypass
+for only the dedicated source IPv4/IPv6 shown by the script, matching the
+dedicated MAC where supported. Keep ordinary/business source addresses under
+the router's proxy rules. A static DHCP reservation only stabilizes the IPv4
+address; it does not configure this bypass. Verify IPv4, IPv6, and WebRTC egress
+from a client using this exit node after the router rules are ready.

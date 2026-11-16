@@ -24,6 +24,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
     k8sUtils.generateEnv(name='GITEA__database__NAME', value=$.databaseName),
     k8sUtils.generateEnv(name='GITEA__database__USER', value=$.databaseUser),
     k8sUtils.generateSecretEnv(name='GITEA__database__PASSWD', secretName=$.databasePasswordSecretName, key='password'),
+    k8sUtils.generateEnv(name='GITEA__migrations__ALLOWED_HOST_LIST', value='198.18.0.0/16:[80|443]'),
     k8sUtils.generateEnv(name='DISABLE_SSH', value='false'),
     k8sUtils.generateEnv(name='START_SSH_SERVER', value='true'),
   ]),

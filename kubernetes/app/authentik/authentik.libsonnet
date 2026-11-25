@@ -15,7 +15,7 @@ local k8sUtils = import 'utils/k8s-utils.libsonnet';
   serverReplicas:: 1,
   workerReplicas:: 2,
 
-  local containerImage = 'ghcr.io/goauthentik/server:2026.8.5',
+  local containerImage = 'ghcr.io/goauthentik/server:2026.8.7',
 
   local hosts = ['authentik.aetherrootr.com'],
 
